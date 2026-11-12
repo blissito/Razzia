@@ -6,10 +6,11 @@ import { joinGame } from "@razzia/web/features/game/queries"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { createStatus } from "@razzia/web/features/game/utils/createStatus"
 import { ApiError } from "@razzia/web/lib/api"
+import { safeSet } from "@razzia/web/lib/storage"
 import { useMutation } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { StatusCodes } from "http-status-codes"
-import { type KeyboardEvent, useState } from "react"
+import { type KeyboardEvent, useEffect, useRef, useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
 
@@ -17,15 +18,17 @@ const Username = () => {
   const { inviteCode, generatedUsernames, updatePlayer } = usePlayerStore()
   const navigate = useNavigate()
   const [username, setUsername] = useState("")
+  const { name: presetName } = useSearch({ from: "/(auth)/" })
+  const hasAutoJoinedRef = useRef(false)
   const { t } = useTranslation()
 
   const { mutate: join, isPending } = useMutation({
     mutationFn: joinGame,
     onSuccess: ({ gameId, ticket, username: name }) => {
-      localStorage.setItem("game_id", gameId)
+      safeSet("game_id", gameId)
 
       if (inviteCode) {
-        localStorage.setItem("game_pin", inviteCode)
+        safeSet("game_pin", inviteCode)
       }
 
       updatePlayer({
@@ -57,6 +60,18 @@ const Username = () => {
       username: generatedUsernames ? undefined : username,
     })
   }
+
+  useEffect(() => {
+    if (!presetName || !inviteCode || hasAutoJoinedRef.current) {
+      return
+    }
+
+    hasAutoJoinedRef.current = true
+    join({
+      inviteCode,
+      username: generatedUsernames ? undefined : presetName,
+    })
+  }, [presetName, inviteCode, generatedUsernames, join])
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {

@@ -5,6 +5,8 @@ import { z } from "zod"
 
 const searchSchema = z.object({
   pin: z.coerce.string().optional(),
+  // Embedding hosts pass the player name so nobody has to type it
+  name: z.coerce.string().max(24).optional(),
 })
 
 const AuthLayout = () => (

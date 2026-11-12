@@ -1,2 +1,18 @@
 #!/bin/sh
+# CONFIG_PATH lets a host with a single mounted volume keep quizzes, results,
+# media and branding there; nginx keeps serving them from /app/config.
+CONFIG="${CONFIG_PATH:-/app/config}"
+mkdir -p "$CONFIG"
+if [ "$CONFIG" != "/app/config" ]; then
+  rm -rf /app/config
+  ln -sfn "$CONFIG" /app/config
+fi
+
+# FRAME_ANCESTORS="https://www.example.com https://example.com" restricts
+# which sites may embed the app in an iframe. Unset: no restriction.
+: > /etc/nginx/frame-ancestors.inc
+if [ -n "${FRAME_ANCESTORS:-}" ]; then
+  echo "add_header Content-Security-Policy \"frame-ancestors 'self' ${FRAME_ANCESTORS}\" always;" > /etc/nginx/frame-ancestors.inc
+fi
+
 exec nginx -g "daemon off;"

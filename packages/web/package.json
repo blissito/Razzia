@@ -21,6 +21,7 @@
     "@tanstack/react-router": "^1.170.46",
     "clsx": "^2.1.1",
     "hono": "catalog:",
+    "howler": "2.2.4",
     "http-status-codes": "catalog:",
     "i18next": "catalog:",
     "i18next-browser-languagedetector": "^8.2.2",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@tanstack/router-plugin": "^1.168.48",
+    "@types/howler": "^2.2.13",
     "@types/node": "catalog:",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

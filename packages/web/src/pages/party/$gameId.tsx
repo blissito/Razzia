@@ -1,3 +1,4 @@
+import { safeRemove } from "@razzia/web/lib/storage"
 import { EVENTS } from "@razzia/common/constants"
 import { STATUS } from "@razzia/common/types/game/status"
 import GameWrapper from "@razzia/web/features/game/components/GameWrapper"
@@ -93,8 +94,8 @@ const PlayerGamePage = () => {
   })
 
   useEvent(EVENTS.GAME.RESET, (message) => {
-    localStorage.removeItem("game_pin")
-    localStorage.removeItem("game_id")
+    safeRemove("game_pin")
+    safeRemove("game_id")
     navigate({ to: "/" })
     resetPlayer()
     setQuestionStates(null)

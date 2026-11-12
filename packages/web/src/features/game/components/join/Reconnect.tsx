@@ -2,6 +2,7 @@ import Button from "@razzia/web/components/Button"
 import Card from "@razzia/web/components/Card"
 import { inviteCodeQuery } from "@razzia/web/features/game/queries"
 import { ApiError } from "@razzia/web/lib/api"
+import { safeGet, safeRemove } from "@razzia/web/lib/storage"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { StatusCodes } from "http-status-codes"
@@ -10,16 +11,16 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 const clearSavedGame = () => {
-  localStorage.removeItem("game_pin")
-  localStorage.removeItem("game_id")
+  safeRemove("game_pin")
+  safeRemove("game_id")
 }
 
 const Reconnect = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [saved, setSaved] = useState(() => ({
-    pin: localStorage.getItem("game_pin"),
-    gameId: localStorage.getItem("game_id"),
+    pin: safeGet("game_pin"),
+    gameId: safeGet("game_id"),
   }))
 
   const { data, error, isPending } = useQuery({
