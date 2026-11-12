@@ -26,7 +26,9 @@ https://quiz.example.com/embed/manager#token=<jwt>&gameId=<id>   -> the game boa
 https://quiz.example.com/embed/manager#token=<jwt>&to=quizz      -> the quiz editor
 ```
 
-Add `&join=<https url>` next to `gameId` to give the lobby board the host app's own entry link: the board shows it as the QR code instead of the PIN card. Combine it with `joinHint` in `branding/theme.json` (the text next to the QR). With `joinHint` alone the board shows only the text.
+Add `&join=<https url>` next to `gameId` to give the lobby board the host app's own entry link: the board shows it as the QR code instead of the PIN card. Combine it with `joinHint` in `branding/theme.json` (the text next to the QR). Without `join` the board keeps the regular PIN card and QR.
+
+`POST /api/games` accepts `requireIdentity: true` for a members-only game: joins without a signed identity get 403 for that game only, while other games stay open to anyone with the PIN. `REQUIRE_IDENTITY=1` still forces it for the whole instance.
 
 The token travels in the URL hash, which never reaches the server, its access logs or `Referer` headers. The page stores it and reloads on the target route. Open the board right away: a game without a connected manager expires after about 5 minutes.
 

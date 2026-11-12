@@ -10,7 +10,7 @@ import { requireManager, requireSession } from "@razzia/socket/api/middleware"
 import { i18nHook } from "@razzia/socket/api/validation"
 import { mintJoinTicket } from "@razzia/socket/services/auth"
 import { getQuizz } from "@razzia/socket/services/config"
-import { requireIdentity } from "@razzia/socket/env"
+import { identitySecret, requireIdentity } from "@razzia/socket/env"
 import { verifyIdentity } from "@razzia/socket/services/identity"
 import Game from "@razzia/socket/services/game"
 import { getIo } from "@razzia/socket/services/io"
@@ -24,7 +24,7 @@ const routes = apiFactory
     requireManager,
     zValidator("json", createGameValidator, i18nHook),
     (c) => {
-      const { quizzId } = c.req.valid("json")
+      const { quizzId, requireIdentity: membersOnly } = c.req.valid("json")
       const quizz = getQuizz().find((q) => q.id === quizzId)
 
       if (!quizz) {
@@ -34,6 +34,7 @@ const routes = apiFactory
       const registry = Registry.getInstance()
       const game = new Game(getIo(), c.get("claims").sub, quizz)
 
+      game.requireIdentity = Boolean(membersOnly && identitySecret)
       registry.addGame(game)
       registry.markGameAsEmpty(game)
 
@@ -87,7 +88,7 @@ const routes = apiFactory
       const game = Registry.getInstance().getGameByInviteCode(inviteCode)
       const verified = identity ? verifyIdentity(identity, inviteCode) : null
 
-      if (requireIdentity && !verified) {
+      if ((requireIdentity || game?.requireIdentity) && !verified) {
         return c.json(
           { error: "errors:auth.unauthorized" },
           StatusCodes.FORBIDDEN,

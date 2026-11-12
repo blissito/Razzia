@@ -33,6 +33,8 @@ class Game {
 
   private _settings: GameSettings = createDefaultGameSettings()
   private _locked = false
+  // Set at creation by an embedding host app: only signed identities may join
+  requireIdentity = false
 
   private readonly io: Server
   private readonly _manager: {

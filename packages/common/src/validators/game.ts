@@ -7,6 +7,8 @@ import z from "zod"
 
 export const createGameValidator = z.object({
   quizzId: z.string().min(1, "errors:quizz.notFound"),
+  // Members-only game: every join needs a signed identity (needs IDENTITY_SECRET)
+  requireIdentity: z.boolean().optional(),
 })
 
 export const checkGameValidator = z.object({

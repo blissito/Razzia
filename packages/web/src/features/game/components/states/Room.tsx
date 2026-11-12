@@ -72,7 +72,7 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
 
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-2">
-      {joinHint || hostJoinUrl ? (
+      {hostJoinUrl ? (
         <div className="mb-10 flex flex-col items-center gap-3 md:flex-row md:items-stretch">
           <p className="flex max-w-xl items-center rounded-xl bg-white px-8 py-6 text-center text-2xl font-bold md:text-left">
             {joinHint ?? t("game:joinInstruction")}
