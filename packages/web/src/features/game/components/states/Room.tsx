@@ -2,6 +2,7 @@ import { EVENTS } from "@razzia/common/constants"
 import type { Player } from "@razzia/common/types/game"
 import type { ManagerStatusDataMap } from "@razzia/common/types/game/status"
 import { getBranding } from "@razzia/web/branding"
+import { safeGet } from "@razzia/web/lib/storage"
 import PlayerConnectionStatus from "@razzia/web/features/game/components/PlayerConnectionStatus"
 import {
   useEvent,
@@ -30,6 +31,8 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
   const { t } = useTranslation()
   // Instancias con entrada sólo por identidad firmada: el PIN y el QR no le sirven a nadie.
   const joinHint = getBranding()?.joinHint
+  // The host app's own entry link (see /embed/manager): the QR sends players there.
+  const hostJoinUrl = gameId ? safeGet(`embed_join_${gameId}`) : null
 
   useOnClickOutside({ ref: qrContentRef, handler: () => setQrOpen(false) })
 
@@ -69,10 +72,17 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
 
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-2">
-      {joinHint ? (
-        <p className="mb-10 max-w-2xl rounded-xl bg-white px-8 py-6 text-center text-2xl font-bold">
-          {joinHint}
-        </p>
+      {joinHint || hostJoinUrl ? (
+        <div className="mb-10 flex flex-col items-center gap-3 md:flex-row md:items-stretch">
+          <p className="flex max-w-xl items-center rounded-xl bg-white px-8 py-6 text-center text-2xl font-bold md:text-left">
+            {joinHint ?? t("game:joinInstruction")}
+          </p>
+          {hostJoinUrl && (
+            <div className="flex h-40 shrink-0 rounded-xl bg-white p-2">
+              <QRCodeSVG className="h-auto w-auto" value={hostJoinUrl} />
+            </div>
+          )}
+        </div>
       ) : (
         <div className="mb-10 flex flex-col-reverse items-center gap-3 md:flex-row md:items-stretch">
           <div className="flex flex-col gap-3 md:flex-row">
