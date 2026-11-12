@@ -1,6 +1,7 @@
 import { EVENTS } from "@razzia/common/constants"
 import type { Player } from "@razzia/common/types/game"
 import type { ManagerStatusDataMap } from "@razzia/common/types/game/status"
+import { getBranding } from "@razzia/web/branding"
 import PlayerConnectionStatus from "@razzia/web/features/game/components/PlayerConnectionStatus"
 import {
   useEvent,
@@ -27,6 +28,8 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
   const [qrOpen, setQrOpen] = useState(false)
   const qrContentRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
+  // Instancias con entrada sólo por identidad firmada: el PIN y el QR no le sirven a nadie.
+  const joinHint = getBranding()?.joinHint
 
   useOnClickOutside({ ref: qrContentRef, handler: () => setQrOpen(false) })
 
@@ -66,79 +69,87 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
 
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-2">
-      <div className="mb-10 flex flex-col-reverse items-center gap-3 md:flex-row md:items-stretch">
-        <div className="flex flex-col gap-3 md:flex-row">
-          <div className="flex flex-col items-center justify-center rounded-xl bg-white px-6 py-4 md:flex-row">
-            <div>
-              <p className="text-2xl font-bold">{t("game:joinInstruction")}</p>
-              <p className="max-w-64 text-lg font-extrabold break-all">
-                {webUrl}
-              </p>
-            </div>
-
-            <div className="my-4 h-0.5 w-full bg-gray-300 md:mx-4 md:h-full md:w-0.5" />
-
-            <div>
-              <p className="text-2xl font-bold">{t("game:gamePinLabel")}</p>
-              <p className="text-6xl font-extrabold tabular-nums">
-                {locked
-                  ? Array.from(inviteCode ?? "", (_, i) => (
-                      <span
-                        key={i}
-                        className="inline-block w-[1ch] text-center"
-                      >
-                        #
-                      </span>
-                    ))
-                  : inviteCode}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {locked ? (
-          <div className="flex size-40 shrink-0 items-center justify-center rounded-xl bg-white p-2">
-            <Lock className="size-16" />
-          </div>
-        ) : (
-          <AlertDialog.Root open={qrOpen} onOpenChange={setQrOpen}>
-            <AlertDialog.Trigger
-              aria-label={t("game:showQrCode")}
-              className="group relative flex h-40 shrink-0 cursor-pointer rounded-xl bg-white p-2"
-            >
-              <QRCodeSVG
-                className="h-auto w-auto"
-                value={`${webUrl}?pin=${inviteCode}`}
-              />
-              <div className="absolute inset-0 flex items-center justify-center rounded-xl opacity-0 transition-opacity group-hover:opacity-100">
-                <div className="rounded-md bg-black/80 p-2">
-                  <Maximize2 className="size-6 text-white" />
-                </div>
+      {joinHint ? (
+        <p className="mb-10 max-w-2xl rounded-xl bg-white px-8 py-6 text-center text-2xl font-bold">
+          {joinHint}
+        </p>
+      ) : (
+        <div className="mb-10 flex flex-col-reverse items-center gap-3 md:flex-row md:items-stretch">
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="flex flex-col items-center justify-center rounded-xl bg-white px-6 py-4 md:flex-row">
+              <div>
+                <p className="text-2xl font-bold">
+                  {t("game:joinInstruction")}
+                </p>
+                <p className="max-w-64 text-lg font-extrabold break-all">
+                  {webUrl}
+                </p>
               </div>
-            </AlertDialog.Trigger>
 
-            <AlertDialog.Portal>
-              <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/70" />
-              <AlertDialog.Content
-                ref={qrContentRef}
-                className="fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6"
+              <div className="my-4 h-0.5 w-full bg-gray-300 md:mx-4 md:h-full md:w-0.5" />
+
+              <div>
+                <p className="text-2xl font-bold">{t("game:gamePinLabel")}</p>
+                <p className="text-6xl font-extrabold tabular-nums">
+                  {locked
+                    ? Array.from(inviteCode ?? "", (_, i) => (
+                        <span
+                          key={i}
+                          className="inline-block w-[1ch] text-center"
+                        >
+                          #
+                        </span>
+                      ))
+                    : inviteCode}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {locked ? (
+            <div className="flex size-40 shrink-0 items-center justify-center rounded-xl bg-white p-2">
+              <Lock className="size-16" />
+            </div>
+          ) : (
+            <AlertDialog.Root open={qrOpen} onOpenChange={setQrOpen}>
+              <AlertDialog.Trigger
+                aria-label={t("game:showQrCode")}
+                className="group relative flex h-40 shrink-0 cursor-pointer rounded-xl bg-white p-2"
               >
-                <button
-                  onClick={handleCloseQrCode}
-                  aria-label={t("common:close")}
-                  className="hover:bg-muted absolute -top-3 -right-3 rounded-full bg-white p-1.5 shadow-md"
-                >
-                  <X className="text-foreground size-6" />
-                </button>
                 <QRCodeSVG
-                  className="size-56 md:size-70 lg:size-95"
+                  className="h-auto w-auto"
                   value={`${webUrl}?pin=${inviteCode}`}
                 />
-              </AlertDialog.Content>
-            </AlertDialog.Portal>
-          </AlertDialog.Root>
-        )}
-      </div>
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="rounded-md bg-black/80 p-2">
+                    <Maximize2 className="size-6 text-white" />
+                  </div>
+                </div>
+              </AlertDialog.Trigger>
+
+              <AlertDialog.Portal>
+                <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/70" />
+                <AlertDialog.Content
+                  ref={qrContentRef}
+                  className="fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6"
+                >
+                  <button
+                    onClick={handleCloseQrCode}
+                    aria-label={t("common:close")}
+                    className="hover:bg-muted absolute -top-3 -right-3 rounded-full bg-white p-1.5 shadow-md"
+                  >
+                    <X className="text-foreground size-6" />
+                  </button>
+                  <QRCodeSVG
+                    className="size-56 md:size-70 lg:size-95"
+                    value={`${webUrl}?pin=${inviteCode}`}
+                  />
+                </AlertDialog.Content>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          )}
+        </div>
+      )}
 
       <h2 className="mb-6 text-4xl font-bold text-white drop-shadow-lg">
         {t(text)}

@@ -9,6 +9,7 @@ const brandingSchema = z.object({
   logo: z.string().optional(),
   favicon: z.string().optional(),
   background: z.string().optional(),
+  joinHint: z.string().optional(),
 })
 
 export type BrandingTheme = z.infer<typeof brandingSchema>
