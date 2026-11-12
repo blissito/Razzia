@@ -16,6 +16,8 @@ export const checkGameValidator = z.object({
 export const joinGameValidator = z.object({
   inviteCode: inviteCodeValidator,
   username: usernameValidator.optional(),
+  // Signed by an embedding host app, see socket/src/services/identity.ts
+  identity: z.string().max(1024).optional(),
 })
 
 const delayValidator = z

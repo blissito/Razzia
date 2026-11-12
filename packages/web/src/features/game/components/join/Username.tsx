@@ -18,7 +18,7 @@ const Username = () => {
   const { inviteCode, generatedUsernames, updatePlayer } = usePlayerStore()
   const navigate = useNavigate()
   const [username, setUsername] = useState("")
-  const { name: presetName } = useSearch({ from: "/(auth)/" })
+  const { name: presetName, id: identity } = useSearch({ from: "/(auth)/" })
   const hasAutoJoinedRef = useRef(false)
   const { t } = useTranslation()
 
@@ -58,6 +58,7 @@ const Username = () => {
     join({
       inviteCode,
       username: generatedUsernames ? undefined : username,
+      identity,
     })
   }
 
@@ -70,8 +71,9 @@ const Username = () => {
     join({
       inviteCode,
       username: generatedUsernames ? undefined : presetName,
+      identity,
     })
-  }, [presetName, inviteCode, generatedUsernames, join])
+  }, [presetName, identity, inviteCode, generatedUsernames, join])
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {

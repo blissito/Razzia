@@ -13,6 +13,8 @@ https://quiz.example.com/?pin=123456&name=Ana&lng=es&mute=1
 - `lng`: forces the language.
 - `mute=1`: silences the player view for the rest of the session; the shared game board already carries the sound.
 
+- `id`: a signed identity (below). The server imposes the signed name and saves the host app's user id with the results.
+
 Storage access is guarded, so a browser that blocks iframe storage no longer crashes the join screen.
 
 ## Manager token handoff
@@ -33,4 +35,16 @@ The token travels in the URL hash, which never reaches the server, its access lo
 | `CONFIG_PATH`     | Where quizzes, results, media and branding live. Defaults to `/app/config`. Useful with a single volume. |
 | `FRAME_ANCESTORS` | Space-separated origins allowed to embed the app (`Content-Security-Policy: frame-ancestors`).           |
 
+| `IDENTITY_SECRET` | Shared secret (32+ characters) for signed player identities. |
+| `REQUIRE_IDENTITY` | `1` refuses every join without a valid identity, so a guessed PIN is useless to outsiders. |
+
 nginx also caps attempts on `/api/auth/manager` and `/api/games/check`.
+
+## Signed player identity
+
+The host app vouches for a player with `id=<payload>.<signature>`:
+
+- `payload`: `base64url(JSON)` of `{ "sub": "<host user id>", "name": "<display name>", "exp": <unix seconds>, "pin": "<invite code>" }`. `pin` is optional and binds the token to one game.
+- `signature`: `hex(HMAC-SHA256(payload, IDENTITY_SECRET))`.
+
+A player who joined this way is saved in the result file with `externalId` (the `sub`), next to `username`, `points` and `rank`. Results also carry the `gameId` returned by `POST /api/games`, so the host app can find the result of the game it created.

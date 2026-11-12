@@ -56,6 +56,7 @@ export interface RoundManagerOptions {
   send: SendFn
   onNewQuestion: () => void
   onGameFinished: (_result: GameResult) => void
+  getExternalId?: (_clientId: string) => string | undefined
   getSettings: () => GameSettings
 }
 
@@ -461,6 +462,7 @@ export class RoundManager {
 
     this.opts.onGameFinished({
       id: `${Date.now()}-${nanoid(8)}`,
+      gameId: this.opts.gameId,
       gameMode: this.opts.quizz.gameMode,
       subject: this.opts.quizz.subject,
       date: new Date().toISOString(),
@@ -468,6 +470,7 @@ export class RoundManager {
         username: player.username,
         points: player.points,
         rank: index + 1,
+        externalId: this.opts.getExternalId?.(player.clientId),
       })),
       questions: this.questionsHistory,
     })

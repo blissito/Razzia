@@ -10,6 +10,8 @@ import { requireManager, requireSession } from "@razzia/socket/api/middleware"
 import { i18nHook } from "@razzia/socket/api/validation"
 import { mintJoinTicket } from "@razzia/socket/services/auth"
 import { getQuizz } from "@razzia/socket/services/config"
+import { requireIdentity } from "@razzia/socket/env"
+import { verifyIdentity } from "@razzia/socket/services/identity"
 import Game from "@razzia/socket/services/game"
 import { getIo } from "@razzia/socket/services/io"
 import Registry from "@razzia/socket/services/registry"
@@ -81,8 +83,16 @@ const routes = apiFactory
     requireSession,
     zValidator("json", joinGameValidator, i18nHook),
     async (c) => {
-      const { inviteCode, username } = c.req.valid("json")
+      const { inviteCode, username, identity } = c.req.valid("json")
       const game = Registry.getInstance().getGameByInviteCode(inviteCode)
+      const verified = identity ? verifyIdentity(identity, inviteCode) : null
+
+      if (requireIdentity && !verified) {
+        return c.json(
+          { error: "errors:auth.unauthorized" },
+          StatusCodes.FORBIDDEN,
+        )
+      }
 
       if (!game) {
         return c.json({ error: "errors:game.notFound" }, StatusCodes.NOT_FOUND)
@@ -111,14 +121,21 @@ const routes = apiFactory
         return c.json({ error: "errors:game.locked" }, StatusCodes.FORBIDDEN)
       }
 
-      if (!game.settings.generatedUsernames && !username) {
+      // A vouched-for player keeps the name the host app signed
+      const requestedName = verified?.name ?? username
+
+      if (!game.settings.generatedUsernames && !requestedName) {
         return c.json(
           { error: "errors:auth.usernameTooShort" },
           StatusCodes.BAD_REQUEST,
         )
       }
 
-      const name = game.settings.generatedUsernames ? undefined : username
+      const name = game.settings.generatedUsernames ? undefined : requestedName
+
+      if (verified) {
+        game.setExternalId(sub, verified.sub)
+      }
 
       return c.json({
         gameId: game.gameId,

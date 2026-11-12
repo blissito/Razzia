@@ -122,10 +122,14 @@ export interface GameResultPlayer {
   username: string
   points: number
   rank: number
+  /** The embedding host app's user id, when the player joined with a signed identity. */
+  externalId?: string
 }
 
 export interface GameResult {
   id: string
+  /** Absent in results written before the embedding additions. */
+  gameId?: string
   gameMode: QuizzMode
   subject: string
   date: string

@@ -7,6 +7,8 @@ const searchSchema = z.object({
   pin: z.coerce.string().optional(),
   // Embedding hosts pass the player name so nobody has to type it
   name: z.coerce.string().max(24).optional(),
+  // ...and a signed identity that vouches for it (IDENTITY_SECRET)
+  id: z.coerce.string().max(1024).optional(),
 })
 
 const AuthLayout = () => (

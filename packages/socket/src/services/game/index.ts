@@ -44,6 +44,8 @@ class Game {
   private readonly round: RoundManager
   private readonly cooldown: CooldownTimer
   private managerGraceTimer: NodeJS.Timeout | null = null
+  // Maps a clientId to the embedding host app's user id (signed identity at join)
+  private readonly externalIds = new Map<string, string>()
 
   private lastBroadcastStatus: {
     name: Status
@@ -93,12 +95,17 @@ class Game {
         this.managerStatus = null
       },
       onGameFinished: saveResult,
+      getExternalId: (clientId) => this.externalIds.get(clientId),
       getSettings: () => this._settings,
     })
 
     console.log(
       `New game created: ${this.inviteCode} subject: ${quizz.subject}`,
     )
+  }
+
+  setExternalId(clientId: string, externalId: string) {
+    this.externalIds.set(clientId, externalId)
   }
 
   get manager() {

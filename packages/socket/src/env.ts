@@ -18,6 +18,17 @@ const envSchema = z.object({
         `JWT_SECRET must be at least ${MIN_SECRET_LENGTH} characters`,
       ),
   ),
+  // Shared with a host app that vouches for its players (see services/identity.ts).
+  IDENTITY_SECRET: optional(
+    z
+      .string()
+      .min(
+        MIN_SECRET_LENGTH,
+        `IDENTITY_SECRET must be at least ${MIN_SECRET_LENGTH} characters`,
+      ),
+  ),
+  // "1" refuses every join that does not carry a valid identity.
+  REQUIRE_IDENTITY: optional(z.string()),
   GAME_SPEED: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z.coerce
@@ -40,6 +51,11 @@ if (!parsed.success) {
 export const managerPassword = parsed.data.MANAGER_PASSWORD
 
 export const gameSpeed = parsed.data.GAME_SPEED
+
+export const identitySecret = parsed.data.IDENTITY_SECRET
+
+export const requireIdentity =
+  Boolean(identitySecret) && parsed.data.REQUIRE_IDENTITY === "1"
 
 export const jwtSecret =
   parsed.data.JWT_SECRET ?? randomBytes(32).toString("hex")
