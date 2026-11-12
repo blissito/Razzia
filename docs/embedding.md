@@ -26,6 +26,8 @@ https://quiz.example.com/embed/manager#token=<jwt>&gameId=<id>   -> the game boa
 https://quiz.example.com/embed/manager#token=<jwt>&to=quizz      -> the quiz editor
 ```
 
+Add `&join=<https url>` next to `gameId` to give the lobby board the host app's own entry link: the board shows it as the QR code instead of the PIN card. Combine it with `joinHint` in `branding/theme.json` (the text next to the QR). With `joinHint` alone the board shows only the text.
+
 The token travels in the URL hash, which never reaches the server, its access logs or `Referer` headers. The page stores it and reloads on the target route. Open the board right away: a game without a connected manager expires after about 5 minutes.
 
 ## Container
@@ -48,3 +50,10 @@ The host app vouches for a player with `id=<payload>.<signature>`:
 - `signature`: `hex(HMAC-SHA256(payload, IDENTITY_SECRET))`.
 
 A player who joined this way is saved in the result file with `externalId` (the `sub`), next to `username`, `points` and `rank`. Results also carry the `gameId` returned by `POST /api/games`, so the host app can find the result of the game it created.
+
+## Working on this fork
+
+- Branch `fixtergeek`; every push builds `ghcr.io/blissito/razzia:main` (`.github/workflows/ghcr-main.yml`).
+- Checks: `pnpm --filter @razzia/web exec tsc --noEmit -p .`, `pnpm exec oxlint <files>`, `pnpm test`.
+- Keep additions optional and off by default, so the fork can still follow upstream.
+- A branded instance (a `branding/theme.json` exists) hides the project footer on the entry screens.
