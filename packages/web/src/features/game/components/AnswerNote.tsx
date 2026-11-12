@@ -12,8 +12,8 @@ const AnswerNote = ({ note }: Props) => {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-2">
-      <div className="anim-show text-foreground flex items-start gap-3 rounded-xl bg-white px-4 py-3 text-base font-semibold shadow-lg md:text-xl">
+    <div className="w-full">
+      <div className="anim-show text-foreground bg-card border-border flex items-start gap-3 rounded-[10px] border px-4 py-3 text-base font-semibold md:text-[1.15rem]">
         <Lightbulb className="text-primary mt-0.5 size-6 shrink-0" />
         <p className="min-w-0 wrap-anywhere whitespace-pre-line">{text}</p>
       </div>

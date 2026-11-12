@@ -1,8 +1,8 @@
 import type { CommonStatusDataMap } from "@razzia/common/types/game/status"
-import CricleCheck from "@razzia/web/features/game/components/icons/CricleCheck"
-import CricleXmark from "@razzia/web/features/game/components/icons/CricleXmark"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { SFX } from "@razzia/web/features/game/utils/constants"
+import clsx from "clsx"
+import { Check, X } from "lucide-react"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import useSound from "use-sound"
@@ -28,26 +28,32 @@ const Result = ({
     // oxlint-disable-next-line
   }, [sfxResults])
 
+  const Icon = correct ? Check : X
+
   return (
-    <section className="anim-show relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center">
-      {correct ? (
-        <CricleCheck className="aspect-square max-h-60 w-full" />
-      ) : (
-        <CricleXmark className="aspect-square max-h-60 w-full" />
-      )}
-      <h2 className="mt-1 text-4xl font-bold text-white drop-shadow-lg">
+    <section className="anim-show mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-2.5 text-center">
+      <span
+        className={clsx(
+          "text-background grid size-18 place-items-center rounded-full",
+          correct ? "bg-correct" : "bg-danger",
+        )}
+      >
+        <Icon className="size-9 stroke-3" />
+      </span>
+      <h2 className="text-foreground text-[1.65rem] font-[650]">
         {t(message)}
       </h2>
-      <p className="mt-1 text-xl font-bold text-white drop-shadow-lg">
+      {correct && (
+        <p className="text-foreground text-[2.5rem] leading-none font-bold tabular-nums">
+          +{points}
+        </p>
+      )}
+      <p className="text-muted-foreground">
         {t("game:resultTop")}
         {t("game:rank", { count: rank, ordinal: true })}
         {aheadOfMe ? `${t("game:resultBehind")}${aheadOfMe}` : ""}
+        {` · ${myPoints} pts`}
       </p>
-      {correct && (
-        <span className="mt-2 rounded-lg bg-black/40 px-4 py-2 text-2xl font-bold text-white drop-shadow-lg">
-          +{points}
-        </span>
-      )}
     </section>
   )
 }

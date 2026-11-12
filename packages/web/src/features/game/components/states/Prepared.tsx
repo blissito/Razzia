@@ -15,8 +15,8 @@ const Prepared = ({
     QUESTION_REGISTRY[questionType].PreparedComponent ?? PreparedAnswers
 
   return (
-    <section className="anim-show relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center">
-      <h2 className="anim-show mb-20 text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl lg:text-5xl">
+    <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center">
+      <h2 className="anim-show text-foreground mb-10 text-center text-3xl leading-tight font-[650] tracking-[-0.01em] wrap-anywhere md:text-[2.4rem]">
         {t("game:questionPrefix")}
         {questionNumber}
       </h2>

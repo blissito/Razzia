@@ -10,15 +10,14 @@ const SingleAnswers = ({
   answers,
   onSubmit,
   readOnly,
-  fill,
 }: AnswerComponentProps) => {
   const handleSubmit = (key: number) => onSubmit([key])
 
   return (
     <div
       className={clsx(
-        "mx-auto mb-4 grid w-full max-w-7xl gap-1 px-2 text-lg font-bold text-white md:text-xl",
-        fill ? "flex-1 auto-rows-fr grid-cols-1 sm:grid-cols-2" : "grid-cols-2",
+        "grid min-h-0 w-full flex-1 auto-rows-fr grid-cols-2",
+        readOnly ? "gap-[0.85rem]" : "gap-2.5",
       )}
     >
       {answers.map((answer, key) => (
@@ -28,7 +27,7 @@ const SingleAnswers = ({
           label={ANSWERS_LABELS[key]}
           onClick={() => handleSubmit(key)}
           disabled={readOnly}
-          large={fill}
+          layout={readOnly ? "row" : "tile"}
         >
           {answer}
         </AnswerButton>

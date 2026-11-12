@@ -13,9 +13,9 @@ const ErrorPage = ({ error }: { error: unknown }) => {
   return (
     <Background>
       <Card className="max-w-md gap-4 text-center">
-        <CircleX className="mx-auto size-12 text-red-500" />
+        <CircleX className="text-danger mx-auto size-12" />
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-gray-800">
+          <h1 className="text-foreground text-xl font-bold">
             {t("errors:route.title")}
           </h1>
           <p className="text-muted-foreground text-sm">

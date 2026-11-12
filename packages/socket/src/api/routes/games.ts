@@ -132,7 +132,13 @@ const routes = apiFactory
       return c.json({ error: "errors:game.locked" }, StatusCodes.FORBIDDEN)
     }
 
-    return c.json({ generatedUsernames: game.settings.generatedUsernames })
+    // Con el PIN ya se sabe de quién es la partida: la pantalla de nombre toma su marca
+    return c.json({
+      generatedUsernames: game.settings.generatedUsernames,
+      subject: game.subject,
+      totalQuestions: game.totalQuestions,
+      branding: game.branding,
+    })
   })
   .post(
     "/join",

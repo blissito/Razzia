@@ -105,18 +105,22 @@ const Answers = ({
 
   const MediaIcon = media?.type === MEDIA_TYPES.VIDEO ? Video : Image
 
+  const isBoard = !player
+  const timeLeft = time > 0 ? Math.max(0, Math.min(1, cooldown / time)) : 0
+
   return (
-    <div className="flex h-full flex-1 flex-col justify-between">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-[1.1rem]">
       {showAnswersOnly ? (
         <>
           <QuestionDialog
             question={question}
             media={isPopupMedia ? media : undefined}
             label={t("game:question.show")}
-            className="hover:bg-accent absolute top-4 right-4 flex size-11 items-center justify-center rounded-md bg-white text-black"
+            className="bg-card text-foreground border-border hover:bg-muted flex min-h-9 items-center gap-2 self-end rounded-full border px-3 text-sm font-semibold"
             showQuestion
           >
-            <CircleQuestionMark className="size-6" />
+            <CircleQuestionMark className="size-4" />
+            {t("game:question.show")}
           </QuestionDialog>
 
           {media?.type === MEDIA_TYPES.AUDIO && (
@@ -126,8 +130,15 @@ const Answers = ({
           )}
         </>
       ) : (
-        <div className="mx-auto inline-flex h-full min-h-0 w-full max-w-7xl flex-1 flex-col items-center justify-center gap-5">
-          <h2 className="text-center text-2xl font-bold text-white drop-shadow-lg md:text-4xl lg:text-5xl">
+        <>
+          <h2
+            className={clsx(
+              "text-foreground wrap-anywhere",
+              isBoard
+                ? "text-[2.4rem] leading-[1.15] font-[650] tracking-[-0.01em]"
+                : "text-[1.2rem] leading-tight font-semibold",
+            )}
+          >
             {question}
           </h2>
 
@@ -135,9 +146,9 @@ const Answers = ({
             <QuestionDialog
               question={question}
               media={media}
-              className="hover:bg-accent flex items-center gap-2 rounded-lg bg-white px-4 py-2 font-bold text-black drop-shadow-md"
+              className="bg-card text-foreground border-border hover:bg-muted flex min-h-9 items-center gap-2 self-start rounded-full border px-3 text-sm font-semibold"
             >
-              <MediaIcon className="size-5" />
+              <MediaIcon className="size-4" />
               {t(
                 media?.type === MEDIA_TYPES.VIDEO
                   ? "game:media.showVideo"
@@ -145,39 +156,48 @@ const Answers = ({
               )}
             </QuestionDialog>
           ) : (
-            <QuestionMedia media={media} alt={question} />
+            media && (
+              <div className="flex justify-center">
+                <QuestionMedia media={media} alt={question} />
+              </div>
+            )
           )}
-        </div>
+        </>
       )}
 
-      <div className={clsx({ "flex flex-1 flex-col": showAnswersOnly })}>
-        <div className="mx-auto mb-4 flex w-full max-w-7xl justify-between gap-1 px-2 text-lg font-bold text-white md:text-xl">
-          {time !== NO_TIME_LIMIT && (
-            <div className="flex flex-col items-center rounded-lg bg-black/40 px-4 text-lg font-bold">
-              <span className="translate-y-1 text-sm">
-                {t("game:hud.time")}
-              </span>
-              <span>{cooldown}</span>
+      <div className="text-muted-foreground flex items-center gap-3 text-sm">
+        {time !== NO_TIME_LIMIT && (
+          <>
+            <div
+              role="timer"
+              aria-label={t("game:hud.time")}
+              className="bg-muted h-2 min-w-0 flex-1 overflow-hidden rounded-full"
+            >
+              <div
+                className="timer-fill bg-primary h-full rounded-full"
+                style={{ width: `${timeLeft * 100}%` }}
+              />
             </div>
-          )}
-          <div className="flex flex-col items-center rounded-lg bg-black/40 px-4 text-lg font-bold">
-            <span className="translate-y-1 text-sm">
-              {t("game:hud.answers")}
+            <span className="text-foreground w-[2ch] text-right font-semibold tabular-nums">
+              {cooldown}
             </span>
-            <span>
-              {totalAnswer}/{totalPlayer}
-            </span>
-          </div>
-        </div>
-
-        <AnswerComponent
-          answers={answers}
-          options={options}
-          onSubmit={handleSubmit}
-          readOnly={!player}
-          fill={showAnswersOnly}
-        />
+          </>
+        )}
+        <span className="ml-auto tabular-nums">
+          {t("game:answeredCount", {
+            answered: totalAnswer,
+            total: totalPlayer,
+          })}
+        </span>
       </div>
+
+      <AnswerComponent
+        answers={answers}
+        options={options}
+        onSubmit={handleSubmit}
+        readOnly={isBoard}
+        fill={showAnswersOnly}
+      />
     </div>
   )
 }

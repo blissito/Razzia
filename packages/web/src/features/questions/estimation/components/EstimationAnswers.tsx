@@ -13,7 +13,7 @@ import { useState, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 
 const BADGE_CLASS =
-  "text-foreground rounded-md bg-white px-2 py-0.5 font-bold shadow-md"
+  "text-foreground bg-card border-border rounded-md border px-2 py-0.5 font-bold"
 
 const EstimationAnswers = ({
   options,
@@ -51,10 +51,10 @@ const EstimationAnswers = ({
 
   if (readOnly) {
     return (
-      <div className="mx-auto mb-6 flex w-full max-w-7xl flex-col gap-3 px-2 pt-6">
-        <div className="relative h-4 rounded-full bg-white/90 shadow-md">
+      <div className="flex w-full flex-col gap-3 pt-6 pb-2">
+        <div className="bg-muted relative h-4 rounded-full">
           <div className="anim-slider-fill-slow bg-primary absolute inset-y-0 left-0 rounded-full" />
-          <div className="anim-slider-thumb-slow bg-primary absolute top-1/2 size-11 -translate-1/2 rounded-full border-5 border-white shadow-lg" />
+          <div className="anim-slider-thumb-slow bg-primary border-card absolute top-1/2 size-11 -translate-1/2 rounded-full border-4" />
         </div>
         <div className="flex justify-between">
           <span className={clsx(BADGE_CLASS, "text-lg")}>
@@ -70,7 +70,7 @@ const EstimationAnswers = ({
 
   return (
     <div
-      className={clsx("mx-auto mb-4 flex w-full flex-col px-2", {
+      className={clsx("mx-auto flex w-full flex-col", {
         "flex-1 justify-center": fill,
         "max-w-7xl": isSlider,
         "max-w-2xl": !isSlider,
@@ -85,7 +85,7 @@ const EstimationAnswers = ({
       >
         {isSlider ? (
           <>
-            <output className="text-foreground mx-auto min-w-24 rounded-xl bg-white px-4 py-1 text-center text-3xl font-bold shadow-md">
+            <output className="text-foreground bg-card border-border mx-auto min-w-24 rounded-[10px] border px-4 py-1 text-center text-3xl font-bold">
               {formatValue(value)}
             </output>
             <div className="flex flex-col gap-3 pt-3">
@@ -130,7 +130,7 @@ const EstimationAnswers = ({
               placeholder={t("game:estimation.yourAnswer")}
               aria-label={t("game:estimation.yourAnswer")}
               autoFocus
-              className="mx-auto w-full max-w-sm bg-white text-center shadow-md"
+              className="mx-auto w-full max-w-sm text-center"
             />
           </div>
         )}
@@ -138,7 +138,7 @@ const EstimationAnswers = ({
         <Button
           type="submit"
           disabled={!canSubmit}
-          className="mx-auto w-full max-w-xs shadow-md"
+          className="mx-auto w-full max-w-xs"
         >
           {t("game:confirm")}
         </Button>

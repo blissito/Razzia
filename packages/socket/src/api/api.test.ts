@@ -284,7 +284,12 @@ describe("games", () => {
     const check = () =>
       request("/games/check", { method: "POST", body: { inviteCode } })
 
-    expect(await json(await check())).toEqual({ generatedUsernames: false })
+    expect(await json(await check())).toEqual({
+      generatedUsernames: false,
+      subject: "Test quizz",
+      totalQuestions: 1,
+      branding: null,
+    })
 
     Registry.getInstance().getGameById(gameId)?.setLocked(true)
 

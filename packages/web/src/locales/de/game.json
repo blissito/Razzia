@@ -64,5 +64,11 @@
   },
   "showQrCode": "QR-Code anzeigen",
   "streak": "Antwortserie",
-  "pinDigit": "PIN-Ziffer {{position}}"
+  "pinDigit": "PIN-Ziffer {{position}}",
+  "joinWithPin": "Gehe zu {{host}} und gib die PIN ein",
+  "answeredCount": "{{answered}} von {{total}} haben geantwortet",
+  "questionOf": "Frage {{current}} von {{total}}",
+  "usernameTitle": "Wie heißt du?",
+  "enter": "Beitreten",
+  "pinTitle": "Gib die PIN ein, die du auf dem Bildschirm siehst"
 }

@@ -1,9 +1,9 @@
 import Button from "@razzia/web/components/Button"
-import Card from "@razzia/web/components/Card"
 import PinInput from "@razzia/web/components/PinInput"
 import { checkInviteCode } from "@razzia/web/features/game/queries"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { ApiError } from "@razzia/web/lib/api"
+import { gameBrandingValidator } from "@razzia/common/validators/branding"
 import { useMutation } from "@tanstack/react-query"
 import { useSearch } from "@tanstack/react-router"
 import { type SubmitEvent, useEffect, useRef, useState } from "react"
@@ -19,8 +19,21 @@ const Room = () => {
 
   const { mutate: check, isPending } = useMutation({
     mutationFn: checkInviteCode,
-    onSuccess: ({ generatedUsernames }, code) => {
-      updatePlayer({ inviteCode: code, generatedUsernames })
+    onSuccess: (
+      { generatedUsernames, subject, totalQuestions, branding },
+      code,
+    ) => {
+      const parsed = gameBrandingValidator.safeParse(branding)
+
+      updatePlayer({
+        inviteCode: code,
+        generatedUsernames,
+        joinInfo: {
+          subject,
+          totalQuestions,
+          branding: parsed.success ? parsed.data : null,
+        },
+      })
     },
     onError: (error) => {
       toast.error(
@@ -44,15 +57,18 @@ const Room = () => {
   }, [pin, check])
 
   return (
-    <Card>
-      <form onSubmit={handleJoin} className="flex flex-col">
-        <p className="mb-2 text-lg font-semibold">{t("game:pinLabel")}</p>
-        <PinInput value={invitation} onChange={setInvitation} />
-        <Button type="submit" className="mt-4" disabled={isPending}>
-          {t("common:submit")}
-        </Button>
-      </form>
-    </Card>
+    <form
+      onSubmit={handleJoin}
+      className="flex w-full max-w-sm flex-col gap-3.5"
+    >
+      <h1 className="text-foreground text-[1.65rem] leading-[1.15] font-[650]">
+        {t("game:pinTitle")}
+      </h1>
+      <PinInput value={invitation} onChange={setInvitation} />
+      <Button type="submit" className="w-full" disabled={isPending}>
+        {t("game:enter")}
+      </Button>
+    </form>
   )
 }
 

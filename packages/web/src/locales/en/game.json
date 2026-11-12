@@ -67,5 +67,11 @@
   },
   "showQrCode": "Show QR code",
   "streak": "Answer streak",
-  "pinDigit": "PIN digit {{position}}"
+  "pinDigit": "PIN digit {{position}}",
+  "joinWithPin": "Go to {{host}} and enter the PIN",
+  "answeredCount": "{{answered}} of {{total}} answered",
+  "questionOf": "Question {{current}} of {{total}}",
+  "usernameTitle": "What's your name?",
+  "enter": "Join",
+  "pinTitle": "Enter the PIN you see on the screen"
 }

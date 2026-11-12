@@ -51,63 +51,47 @@ const Responses = ({ data }: Props) => {
     stopMusic()
   }, [playMusic, stopMusic])
 
+  const title = (
+    <h2 className="text-foreground text-[2.4rem] leading-[1.15] font-[650] tracking-[-0.01em] wrap-anywhere">
+      {question}
+    </h2>
+  )
+
   if (ResponsesComponent) {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-8 pb-4">
-        <h2 className="text-center text-2xl font-bold text-white drop-shadow-lg md:text-4xl lg:text-5xl">
-          {question}
-        </h2>
-        <ResponsesComponent data={data} />
+      <div className="flex min-h-0 flex-1 flex-col gap-[1.1rem]">
+        {title}
+        <div className="flex flex-1 flex-col justify-center">
+          <ResponsesComponent data={data} />
+        </div>
         <AnswerNote note={note} />
       </div>
     )
   }
 
   return (
-    <div className="flex h-full flex-1 flex-col justify-between">
-      <div className="mx-auto inline-flex h-full w-full max-w-7xl flex-1 flex-col items-center justify-center gap-5">
-        <h2 className="text-center text-2xl font-bold text-white drop-shadow-lg md:text-4xl lg:text-5xl">
-          {question}
-        </h2>
+    <div className="flex min-h-0 flex-1 flex-col gap-[1.1rem]">
+      {title}
 
-        <div
-          className={`mt-8 grid h-40 w-full max-w-3xl gap-4 px-2`}
-          style={{ gridTemplateColumns: `repeat(${answers.length}, 1fr)` }}
-        >
-          {answers.map((_, key) => (
-            <div
-              key={key}
-              className={clsx(
-                "flex flex-col justify-end self-end overflow-hidden rounded-md",
-                ANSWERS_COLORS[key],
-              )}
-              style={{ height: percentages[key] }}
-            >
-              <span className="w-full bg-black/10 text-center text-lg font-bold text-white drop-shadow-md">
-                {responses[key] || 0}
-              </span>
-            </div>
-          ))}
-        </div>
+      <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-[0.85rem]">
+        {answers.map((answer, key) => (
+          <AnswerButton
+            key={key}
+            className={clsx(ANSWERS_COLORS[key], {
+              "opacity-35": solutions && !solutions.includes(key),
+            })}
+            label={ANSWERS_LABELS[key]}
+            correct={solutions ? solutions.includes(key) : undefined}
+            count={responses[key] || 0}
+            ratio={key in percentages ? percentages[key] : "0%"}
+            disabled
+          >
+            {answer}
+          </AnswerButton>
+        ))}
       </div>
 
-      <div className="flex flex-col gap-4">
-        <AnswerNote note={note} />
-        <div className="mx-auto mb-4 grid w-full max-w-7xl grid-cols-2 gap-1 rounded-full px-2 text-lg font-bold text-white md:text-xl">
-          {answers.map((answer, key) => (
-            <AnswerButton
-              key={key}
-              className={clsx(ANSWERS_COLORS[key], {
-                "opacity-65": solutions && !solutions.includes(key),
-              })}
-              label={ANSWERS_LABELS[key]}
-              correct={solutions ? solutions.includes(key) : undefined}
-            >
-              {answer}
-            </AnswerButton>
-          ))}
-        </div>
-      </div>
+      <AnswerNote note={note} />
     </div>
   )
 }

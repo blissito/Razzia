@@ -19,10 +19,10 @@ const Tooltip = ({
       <RadixTooltip.Content
         side={side}
         sideOffset={sideOffset}
-        className="data-[state=delayed-open]:animate-fade z-50 rounded-lg bg-black/40 px-2 py-1 text-sm font-semibold text-white drop-shadow-md"
+        className="data-[state=delayed-open]:animate-fade bg-card text-foreground border-border z-50 rounded-lg border px-2 py-1 text-sm font-semibold"
       >
         {content}
-        <RadixTooltip.Arrow className="fill-black/40" />
+        <RadixTooltip.Arrow className="fill-border" />
       </RadixTooltip.Content>
     </RadixTooltip.Portal>
   </RadixTooltip.Root>

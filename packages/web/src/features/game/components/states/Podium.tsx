@@ -1,4 +1,5 @@
 import type { ManagerStatusDataMap } from "@razzia/common/types/game/status"
+import Avatar from "@razzia/web/features/game/components/Avatar"
 import { SFX } from "@razzia/web/features/game/utils/constants"
 import useScreenSize from "@razzia/web/hooks/useScreenSize"
 import clsx from "clsx"
@@ -11,7 +12,6 @@ interface Props {
 }
 
 const SUSPENSE_MIN_PLAYERS = 3
-const SUSPENSE_SPOTLIGHT_STEP = 3
 
 const usePodiumAnimation = (topLength: number) => {
   const hasSuspense = topLength >= SUSPENSE_MIN_PLAYERS
@@ -50,160 +50,106 @@ const usePodiumAnimation = (topLength: number) => {
     return () => clearInterval(interval)
   }, [apparition, topLength])
 
-  return { apparition, hasSuspense }
+  return { apparition }
 }
 
-const medalColor = [
-  {
-    background: "bg-yellow-500",
-    border: "border-yellow-600",
-  },
-  {
-    background: "bg-gray-400",
-    border: "border-gray-200",
-  },
-  {
-    background: "bg-amber-700",
-    border: "border-amber-800",
-  },
+const STEPS = [
+  { rank: 2, visibleFrom: 2, height: "h-[10.4rem]" },
+  { rank: 1, visibleFrom: 3, height: "h-[14.6rem]" },
+  { rank: 3, visibleFrom: 1, height: "h-[7.6rem]" },
 ]
 
-const Medal = ({ rank }: { rank: number }) => {
-  const color = medalColor[rank - 1]
+const CONFETTI_VARIABLES = [
+  "--color-primary",
+  "--color-answer-1",
+  "--color-answer-2",
+  "--color-answer-3",
+  "--color-answer-4",
+]
 
-  return (
-    <div
-      className={clsx(
-        "relative flex aspect-square size-20 items-center justify-center overflow-hidden rounded-full border-8 text-5xl font-extrabold text-white drop-shadow-sm md:size-26 md:border-10 md:text-6xl",
-        color.background,
-        color.border,
-      )}
-    >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
-        <div className="absolute top-[30%] left-1/2 h-6 w-[160%] -translate-x-1/2 -rotate-40 bg-white/25" />
-        <div className="absolute top-[70%] left-1/2 h-3 w-[160%] -translate-x-1/2 -rotate-40 bg-white/25" />
-      </div>
-      <p
-        className="relative z-10"
-        style={{ textShadow: "2px 2px rgba(0,0,0, 0.25)" }}
-      >
-        {rank}
-      </p>
-    </div>
-  )
+// El confeti lleva los colores de la marca; con movimiento reducido no sale
+const useConfetti = () => {
+  const [confetti] = useState(() => {
+    const styles = getComputedStyle(document.documentElement)
+
+    return {
+      enabled: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      colors: CONFETTI_VARIABLES.map((name) =>
+        styles.getPropertyValue(name).trim(),
+      ).filter(Boolean),
+    }
+  })
+
+  return confetti
 }
 
-const Podium = ({ data: { subject, top } }: Props) => {
-  const { apparition, hasSuspense } = usePodiumAnimation(top.length)
-
+const Podium = ({ data: { top } }: Props) => {
+  const { apparition } = usePodiumAnimation(top.length)
   const { width, height } = useScreenSize()
+  const confetti = useConfetti()
 
   return (
     <>
-      {apparition >= 4 && (
+      {apparition >= 4 && confetti.enabled && (
         <ReactConfetti
           width={width}
           height={height}
-          className="h-full w-full"
+          colors={confetti.colors}
+          className="pointer-events-none fixed inset-0 z-40 h-full w-full"
         />
       )}
 
-      {hasSuspense && apparition >= SUSPENSE_SPOTLIGHT_STEP && (
-        <div className="pointer-events-none absolute min-h-dvh w-full overflow-hidden">
-          <div className="spotlight"></div>
-        </div>
-      )}
-      <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-between">
-        <h2 className="anim-show text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl lg:text-5xl">
-          {subject}
-        </h2>
+      <section className="-mb-[1.25rem] flex min-h-0 flex-1 items-end justify-center gap-[1rem] overflow-hidden">
+        {STEPS.map(({ rank, visibleFrom, height: stepHeight }) => {
+          const entry = top.at(rank - 1)
 
-        <div
-          style={{ gridTemplateColumns: `repeat(${top.length}, 1fr)` }}
-          className={`grid w-full max-w-200 flex-1 items-end justify-center justify-self-end overflow-x-visible overflow-y-hidden`}
-        >
-          {top[1] && (
+          if (!entry) {
+            return null
+          }
+
+          const isFirst = rank === 1
+          // El nombre del primer lugar se guarda hasta el redoble final
+          const showName = !isFirst || apparition >= 4
+
+          return (
             <div
+              key={rank}
               className={clsx(
-                "z-20 flex h-[50%] w-full translate-y-full flex-col items-center justify-center gap-3 opacity-0 transition-all",
-                { "translate-y-0! opacity-100": apparition >= 2 },
+                "w-[13.2rem] max-w-[32%] min-w-0 translate-y-full text-center opacity-0 transition-all duration-500",
+                { "translate-y-0! opacity-100": apparition >= visibleFrom },
               )}
             >
-              <p
-                className={clsx(
-                  "overflow-visible text-center text-2xl font-bold whitespace-nowrap text-white drop-shadow-lg md:text-4xl",
-                  {
-                    "anim-balanced": apparition >= 4,
-                  },
-                )}
+              <div
+                className={clsx("transition-opacity", {
+                  "opacity-0": !showName,
+                  "anim-balanced": apparition >= 4,
+                })}
               >
-                {top[1].username}
-              </p>
-              <div className="bg-primary flex h-full w-full flex-col items-center gap-4 rounded-t-xl pt-6 text-center shadow-2xl">
-                <Medal rank={2} />
-                <p className="text-3xl font-bold text-white drop-shadow-sm md:text-4xl">
-                  {top[1].points}
+                <Avatar
+                  name={entry.username}
+                  className="mx-auto mb-[0.55rem] size-[3.9rem] text-[1.3rem]"
+                />
+                <p className="text-foreground truncate text-[1.25rem] font-[650]">
+                  {entry.username}
+                </p>
+                <p className="text-muted-foreground text-[0.9rem] tabular-nums">
+                  {entry.points} pts
                 </p>
               </div>
-            </div>
-          )}
-
-          <div
-            className={clsx(
-              "z-30 flex h-[60%] w-full translate-y-full flex-col items-center gap-3 opacity-0 transition-all",
-              {
-                "translate-y-0! opacity-100": apparition >= 3,
-              },
-              {
-                "md:min-w-64": top.length < 2,
-              },
-            )}
-          >
-            <p
-              className={clsx(
-                "overflow-visible text-center text-2xl font-bold whitespace-nowrap text-white opacity-0 drop-shadow-lg md:text-4xl",
-                { "anim-balanced opacity-100": apparition >= 4 },
-              )}
-            >
-              {top[0].username}
-            </p>
-            <div className="bg-primary flex h-full w-full flex-col items-center gap-4 rounded-t-xl pt-6 text-center shadow-2xl">
-              <Medal rank={1} />
-              <p className="text-3xl font-bold text-white drop-shadow-sm md:text-4xl">
-                {top[0].points}
-              </p>
-            </div>
-          </div>
-
-          {top[2] && (
-            <div
-              className={clsx(
-                "z-10 flex h-[40%] w-full translate-y-full flex-col items-center gap-3 opacity-0 transition-all",
-                {
-                  "translate-y-0! opacity-100": apparition >= 1,
-                },
-              )}
-            >
-              <p
+              <div
                 className={clsx(
-                  "overflow-visible text-center text-2xl font-bold whitespace-nowrap text-white drop-shadow-lg md:text-4xl",
-                  {
-                    "anim-balanced": apparition >= 4,
-                  },
+                  "mt-[0.7rem] grid place-items-start justify-center rounded-t-[10px] border border-b-0 pt-[1rem] text-[2.8rem] leading-none font-bold",
+                  stepHeight,
+                  isFirst
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border text-muted-foreground",
                 )}
               >
-                {top[2].username}
-              </p>
-              <div className="bg-primary flex h-full w-full flex-col items-center gap-4 rounded-t-xl pt-6 text-center shadow-2xl">
-                <Medal rank={3} />
-
-                <p className="text-3xl font-bold text-white drop-shadow-sm md:text-4xl">
-                  {top[2].points}
-                </p>
+                {rank}
               </div>
             </div>
-          )}
-        </div>
+          )
+        })}
       </section>
     </>
   )

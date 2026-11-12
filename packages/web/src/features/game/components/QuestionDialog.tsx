@@ -31,7 +31,7 @@ const QuestionDialog = ({
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="data-[state=open]:animate-fade fixed inset-0 z-50 bg-black/60" />
+        <Dialog.Overlay className="data-[state=open]:animate-fade bg-background/95 fixed inset-0 z-50" />
 
         <Dialog.Content
           aria-describedby={undefined}
@@ -39,7 +39,7 @@ const QuestionDialog = ({
           className="data-[state=open]:animate-fade fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 p-4"
         >
           {showQuestion ? (
-            <Dialog.Title className="text-center text-2xl font-bold text-white drop-shadow-lg md:text-4xl">
+            <Dialog.Title className="text-foreground text-center text-2xl font-semibold md:text-4xl">
               {question}
             </Dialog.Title>
           ) : (
@@ -48,7 +48,7 @@ const QuestionDialog = ({
             </VisuallyHidden.Root>
           )}
 
-          <Dialog.Close className="absolute top-4 right-4 rounded-lg bg-black/40 p-2 text-white hover:bg-black/60">
+          <Dialog.Close className="bg-card text-foreground border-border hover:bg-muted absolute top-4 right-4 rounded-full border p-2">
             <X className="size-6" />
           </Dialog.Close>
 

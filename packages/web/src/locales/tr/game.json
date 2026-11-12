@@ -64,5 +64,11 @@
   },
   "showQrCode": "QR kodunu göster",
   "streak": "Doğru cevap serisi",
-  "pinDigit": "PIN'in {{position}}. rakamı"
+  "pinDigit": "PIN'in {{position}}. rakamı",
+  "joinWithPin": "{{host}} adresine gir ve PIN'i yaz",
+  "answeredCount": "{{total}} kişiden {{answered}} kişi yanıtladı",
+  "questionOf": "Soru {{current}} / {{total}}",
+  "usernameTitle": "Adın ne?",
+  "enter": "Katıl",
+  "pinTitle": "Ekranda gördüğün PIN'i yaz"
 }

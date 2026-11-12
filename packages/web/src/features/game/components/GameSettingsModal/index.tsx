@@ -61,18 +61,18 @@ const GameSettingsModal = () => {
       <Tooltip content={t("game:settings.title")}>
         <Dialog.Trigger
           aria-label={t("game:settings.title")}
-          className="flex items-center justify-center rounded-lg bg-black/40 px-2.5 text-white drop-shadow-md hover:bg-black/60"
+          className="bg-card text-foreground border-border hover:bg-muted flex size-9 items-center justify-center rounded-full border"
         >
-          <Settings className="size-5" />
+          <Settings className="size-4" />
         </Dialog.Trigger>
       </Tooltip>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="data-[state=open]:animate-fade fixed inset-0 z-50 bg-black/40" />
+        <Dialog.Overlay className="data-[state=open]:animate-fade fixed inset-0 z-50 bg-black/50" />
 
         <Dialog.Content
           aria-describedby={undefined}
-          className="bg-background data-[state=open]:animate-fade fixed top-1/2 left-1/2 z-50 flex max-h-[85dvh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl p-6 shadow-xl"
+          className="bg-card data-[state=open]:animate-fade border-border fixed top-1/2 left-1/2 z-50 flex max-h-[85dvh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-[10px] border p-6"
         >
           <Dialog.Close className="hover:bg-muted text-muted-foreground hover:text-foreground absolute top-5 right-5 rounded-md p-1">
             <X className="size-5" />

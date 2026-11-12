@@ -49,7 +49,7 @@ const EstimationScale = ({
         {start ?? <span>{formatValue(min)}</span>}
       </div>
 
-      <div className="relative h-4 rounded-full bg-gray-200">
+      <div className="bg-muted relative h-4 rounded-full">
         {hasSolution && bubble && (
           <div
             className="absolute bottom-full z-20 mb-5 -translate-x-1/2"
@@ -70,7 +70,7 @@ const EstimationScale = ({
               }}
             />
             <span
-              className="bg-correct pointer-events-none absolute top-1/2 size-8 -translate-1/2 rounded-full border-4 border-white shadow-md"
+              className="bg-correct border-card pointer-events-none absolute top-1/2 size-8 -translate-1/2 rounded-full border-4"
               style={{ left: toPercent(solutionRatio) }}
             />
           </>

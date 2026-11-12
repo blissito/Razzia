@@ -10,7 +10,7 @@ import clsx from "clsx"
 import { Check, Users } from "lucide-react"
 
 const BADGE_CLASS =
-  "text-foreground rounded-xl bg-white px-4 py-1.5 text-2xl font-bold shadow-md"
+  "text-foreground bg-card border-border rounded-[10px] border px-4 py-1.5 text-2xl font-bold"
 
 const BADGE_BOUNDS = { MIN: 0.08, MAX: 0.92 }
 
@@ -46,7 +46,7 @@ const EstimationResponses = ({
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4">
         <div className="relative col-start-2 h-20">
           <div
-            className="absolute bottom-0 flex -translate-x-1/2 flex-col items-center rounded-xl bg-white px-4 py-1.5 whitespace-nowrap shadow-lg"
+            className="bg-card border-border absolute bottom-0 flex -translate-x-1/2 flex-col items-center rounded-[10px] border px-4 py-1.5 whitespace-nowrap"
             style={{ left: clampBadge((fromRatio + toRatio) / 2) }}
           >
             <span className="text-correct flex items-center gap-2 text-3xl font-bold">
@@ -62,7 +62,7 @@ const EstimationResponses = ({
         <span className={clsx(BADGE_CLASS, "col-start-1")}>
           {formatValue(min)}
         </span>
-        <div className="relative h-4 rounded-full bg-white/90 shadow-md">
+        <div className="bg-muted relative h-4 rounded-full">
           <div
             className="bg-correct/70 absolute inset-y-0 rounded-full"
             style={{
@@ -71,7 +71,7 @@ const EstimationResponses = ({
             }}
           />
           <span
-            className="bg-correct absolute top-1/2 size-10 -translate-1/2 rounded-full border-4 border-white shadow-lg"
+            className="bg-correct border-card absolute top-1/2 size-10 -translate-1/2 rounded-full border-4"
             style={{ left: toPercent(getRangeRatio(solution, estimation)) }}
           />
         </div>
@@ -79,7 +79,7 @@ const EstimationResponses = ({
 
         <div className="relative col-start-2 h-12">
           <span
-            className="bg-correct absolute top-1 flex -translate-x-1/2 items-center gap-2 rounded-xl px-4 py-1.5 text-2xl font-bold whitespace-nowrap text-white shadow-lg"
+            className="bg-correct text-background absolute top-1 flex -translate-x-1/2 items-center gap-2 rounded-[10px] px-4 py-1.5 text-2xl font-bold whitespace-nowrap"
             style={{ left: clampBadge(getRangeRatio(solution, estimation)) }}
           >
             <Check className="size-6 stroke-4" />

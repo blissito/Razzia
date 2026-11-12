@@ -15,7 +15,6 @@ import {
   GAME_STATE_COMPONENTS_MANAGER,
   isKeyOf,
 } from "@razzia/web/features/game/utils/constants"
-import GameBackground from "@razzia/web/components/GameBackground"
 import { getScope } from "@razzia/web/lib/session"
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
@@ -128,9 +127,8 @@ const ManagerGamePage = () => {
 
   if (!status && endedMessage) {
     return (
-      <section className="relative flex min-h-dvh items-center justify-center">
-        <GameBackground />
-        <h1 className="z-10 px-6 text-center text-4xl font-bold text-white drop-shadow-lg">
+      <section className="bg-background flex min-h-dvh items-center justify-center">
+        <h1 className="text-foreground px-6 text-center text-3xl font-[650]">
           {t(endedMessage)}
         </h1>
       </section>

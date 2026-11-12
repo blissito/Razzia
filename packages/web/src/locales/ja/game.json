@@ -64,5 +64,11 @@
   },
   "showQrCode": "QRコードを表示",
   "streak": "連続正解",
-  "pinDigit": "PIN の {{position}} 桁目"
+  "pinDigit": "PIN の {{position}} 桁目",
+  "joinWithPin": "{{host}} にアクセスして PIN を入力",
+  "answeredCount": "{{total}} 人中 {{answered}} 人が回答済み",
+  "questionOf": "問題 {{current}} / {{total}}",
+  "usernameTitle": "お名前は？",
+  "enter": "参加する",
+  "pinTitle": "画面に表示されている PIN を入力してください"
 }

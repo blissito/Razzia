@@ -45,11 +45,83 @@ const subscribe = (listener: () => void) => {
 export const useBranding = (): BrandingTheme | null =>
   useSyncExternalStore(subscribe, getBranding)
 
-const getGameLogo = (): string | null => gameBranding?.logo ?? null
+const getGameBrand = (): GameBranding | null => gameBranding
 
-// Logo de la app anfitriona para la partida en curso (el de la instancia no cuenta aquí)
-export const useGameLogo = (): string | null =>
-  useSyncExternalStore(subscribe, getGameLogo)
+// Marca de la partida en curso; null mientras sólo aplica el tema de la instancia
+export const useGameBrand = (): GameBranding | null =>
+  useSyncExternalStore(subscribe, getGameBrand)
+
+// La marca que llegó con el PIN se guarda para que el tablero del jugador abra ya pintado
+const knownGameBrandings = new Map<string, GameBranding>()
+
+export const rememberGameBranding = (gameId: string, branding: GameBranding) =>
+  knownGameBrandings.set(gameId, branding)
+
+export const recallGameBranding = (gameId: string): GameBranding | null =>
+  knownGameBrandings.get(gameId) ?? null
+
+const LIGHT_THRESHOLD = 0.6
+
+// Luminosidad aproximada (0 a 1) de un color hex, rgb() o hsl()
+const lightnessOf = (color: string): number | null => {
+  const hex = /^#([\da-f]{3,8})$/iu.exec(color.trim())?.[1]
+
+  if (hex) {
+    const size = hex.length <= 4 ? 1 : 2
+    const [r, g, b] = [0, 1, 2].map(
+      (i) =>
+        parseInt(hex.slice(i * size, i * size + size).padEnd(2, hex[i]), 16) /
+        255,
+    )
+
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+
+  const numbers = color.match(/[\d.]+/gu)?.map(Number)
+
+  if (!numbers || numbers.length < 3) {
+    return null
+  }
+
+  if (/^hsl/iu.test(color)) {
+    return numbers[2] / 100
+  }
+
+  const [r, g, b] = numbers.map((n) => n / 255)
+
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+const darkened = (name: string) =>
+  `color-mix(in oklab, var(--color-${name}) 32%, var(--color-foreground))`
+
+// Sobre un fondo claro los tonos pastel no se leen como texto: lo que la marca
+// no trae definido se oscurece hacia su color de texto.
+const LIGHT_DEFAULTS: Record<string, string> = {
+  "answer-1-foreground": darkened("answer-1"),
+  "answer-2-foreground": darkened("answer-2"),
+  "answer-3-foreground": darkened("answer-3"),
+  "answer-4-foreground": darkened("answer-4"),
+  correct: "#3f8f4a",
+  danger: "#b93a2b",
+}
+
+export const withDerivedColors = (
+  colors: Record<string, string | undefined>,
+): Record<string, string> => {
+  const given = Object.fromEntries(
+    Object.entries(colors).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined,
+    ),
+  )
+  const lightness = given.background ? lightnessOf(given.background) : null
+
+  if (lightness === null || lightness < LIGHT_THRESHOLD) {
+    return given
+  }
+
+  return { ...LIGHT_DEFAULTS, ...given }
+}
 
 export const loadBranding = async (): Promise<BrandingTheme | null> => {
   try {
@@ -80,7 +152,9 @@ export const applyBranding = (theme: BrandingTheme | null): void => {
   const root = document.documentElement
 
   if (theme.colors) {
-    for (const [name, value] of Object.entries(theme.colors)) {
+    for (const [name, value] of Object.entries(
+      withDerivedColors(theme.colors),
+    )) {
       root.style.setProperty(`--color-${name}`, value)
     }
   }
@@ -146,7 +220,8 @@ export const loadGameBranding = async (
 export const applyGameBranding = (branding: GameBranding): (() => void) => {
   const root = document.documentElement
   const previousTitle = document.title
-  const previousColors = Object.keys(branding.colors ?? {}).map(
+  const colors = withDerivedColors(branding.colors ?? {})
+  const previousColors = Object.keys(colors).map(
     (name) =>
       [
         `--color-${name}`,
@@ -154,7 +229,7 @@ export const applyGameBranding = (branding: GameBranding): (() => void) => {
       ] as const,
   )
 
-  for (const [name, value] of Object.entries(branding.colors ?? {})) {
+  for (const [name, value] of Object.entries(colors)) {
     root.style.setProperty(`--color-${name}`, value)
   }
 

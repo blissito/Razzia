@@ -1,32 +1,71 @@
 @import "tailwindcss";
 @import "tailwindcss-animated";
 
-@theme {
-  --color-primary: #ff9900;
-  --color-secondary: #1a140b;
-  --color-answer-1: #e69f00;
-  --color-answer-2: #56b4e9;
-  --color-answer-3: #3dbfa0;
-  --color-answer-4: #cc79a7;
-  --color-correct: var(--color-green-500);
+/* Sistema "club v2": superficies planas, líneas de 1px, tarjetas de 10px y botones pastilla.
+   Toda la interfaz del juego pinta con estas variables; la marca de una partida sólo las cambia. */
+@theme static {
+  --color-background: #0e1317;
+  --color-card: #141b20;
+  --color-border: #232d33;
+  --color-foreground: #f2f5f4;
+  --color-muted: #1c252b;
+  --color-muted-foreground: #8c999d;
 
-  --color-background: var(--color-white);
+  --color-primary: #85ddcb;
+  --color-primary-foreground: #0e1317;
+  --color-correct: #8dcf6e;
+  --color-danger: #f08a80;
 
-  --color-muted: var(--color-gray-100);
-  --color-muted-foreground: var(--color-gray-500);
-  --color-accent: var(--color-gray-300);
-  --color-accent-foreground: var(--color-gray-600);
-  --color-foreground: var(--color-gray-700);
+  /* Respuestas: el tono base; fondo y texto de cada losa se derivan en `.tone-N` */
+  --color-answer-1: #85ddcb;
+  --color-answer-2: #f2c98a;
+  --color-answer-3: #bdb5f7;
+  --color-answer-4: #f4afaf;
+  --color-answer-1-foreground: var(--color-answer-1);
+  --color-answer-2-foreground: var(--color-answer-2);
+  --color-answer-3-foreground: var(--color-answer-3);
+  --color-answer-4-foreground: var(--color-answer-4);
 
-  --font-display: "Rubik Variable", sans-serif;
+  /* Derivados: siguen a la marca sin que tenga que mandarlos */
+  --color-secondary: var(--color-background);
+  --color-accent: var(--color-border);
+  --color-accent-foreground: var(--color-foreground);
+  --color-primary-soft: color-mix(
+    in oklab,
+    var(--color-primary) 18%,
+    var(--color-background)
+  );
+  --color-primary-soft-foreground: color-mix(
+    in oklab,
+    var(--color-primary) 62%,
+    var(--color-foreground)
+  );
+
+  --font-display:
+    "Inter Variable", -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --animate-fade: fade 150ms ease both;
 }
 
 @layer base {
-  .lucide {
-    stroke-width: 2.5;
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
   }
+
+  .lucide {
+    stroke-width: 2.2;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* El tablero se proyecta: todo escala con el ancho (14.4px a 960, 27px a 1920). */
+html.board-scale {
+  font-size: clamp(14px, 1.5vw, 28px);
 }
 
 button:not(:disabled),
@@ -34,46 +73,55 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-.spotlight {
-  position: absolute;
-  height: 200%;
-  width: 200%;
-  z-index: 100;
-  background-image: radial-gradient(
-    circle,
-    transparent 180px,
-    rgba(0, 0, 0, 0.6) 200px
-  );
-  opacity: 0;
-  left: -50%;
-  top: -50%;
-  transition: all 0.5s;
-  animation: spotlightAnim 2.5s ease-in;
+/* Respuestas: letra + tono. El fondo es el tono diluido en el fondo de la marca. */
+.tone-1 {
+  --tone: var(--color-answer-1);
+  --tone-ink: var(--color-answer-1-foreground);
 }
 
-@keyframes spotlightAnim {
-  0% {
-    left: -20%;
-    top: -20%;
-  }
-  30% {
-    opacity: 0.8;
-    top: -80%;
-    left: -80%;
-  }
-  60% {
-    top: -50%;
-    left: -20%;
-  }
-  80% {
-    top: -50%;
-    left: -50%;
-  }
-  98% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 0;
+.tone-2 {
+  --tone: var(--color-answer-2);
+  --tone-ink: var(--color-answer-2-foreground);
+}
+
+.tone-3 {
+  --tone: var(--color-answer-3);
+  --tone-ink: var(--color-answer-3-foreground);
+}
+
+.tone-4 {
+  --tone: var(--color-answer-4);
+  --tone-ink: var(--color-answer-4-foreground);
+}
+
+.tone-1,
+.tone-2,
+.tone-3,
+.tone-4 {
+  background: color-mix(in oklab, var(--tone) 20%, var(--color-background));
+  color: var(--tone-ink);
+}
+
+.tone-badge {
+  background: currentColor;
+}
+
+.tone-badge > b {
+  color: var(--color-background);
+}
+
+/* Barra de tiempo: informa, así que sigue animada con `prefers-reduced-motion` */
+.timer-fill {
+  transition: width 1s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *:not(.timer-fill),
+  *:not(.timer-fill)::before,
+  *:not(.timer-fill)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -86,15 +134,7 @@ button:not(:disabled),
 }
 
 .anim-quizz {
-  animation: quizz 0.8s linear;
-  transform: perspective(1200px) rotateY(-15deg) rotateX(15deg)
-    translateZ(100px);
-  box-shadow: 10px 10px 0 rgba(20, 24, 29, 1);
-}
-
-.anim-quizz .button {
-  box-shadow: rgba(0, 0, 0, 0.25) -4px -4px inset;
-  animation: quizzButton 0.8s ease-out;
+  animation: show 0.5s ease-out;
 }
 
 .anim-balanced {
@@ -142,9 +182,8 @@ button:not(:disabled),
   background: linear-gradient(
     to right,
     var(--color-primary) var(--progress, 50%),
-    rgb(255 255 255 / 0.9) var(--progress, 50%)
+    var(--color-muted) var(--progress, 50%)
   );
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
   cursor: pointer;
 }
 
@@ -153,18 +192,16 @@ button:not(:disabled),
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 9999px;
-  border: 5px solid white;
+  border: 4px solid var(--color-card);
   background: var(--color-primary);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
 }
 
 .range-slider::-moz-range-thumb {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 9999px;
-  border: 5px solid white;
+  border: 4px solid var(--color-card);
   background: var(--color-primary);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
 }
 
 .range-overlay {
@@ -239,40 +276,6 @@ button:not(:disabled),
     transform: scale(0.8) rotate(6deg);
   }
   80% {
-    transform: scale(1);
-  }
-}
-
-@keyframes quizz {
-  0% {
-    transform: scale(0) perspective(1200px) rotateY(-60deg) rotateX(60deg)
-      translateZ(100px);
-  }
-  60% {
-    transform: scale(1) perspective(1200px) rotateY(-15deg) rotateX(15deg)
-      translateZ(100px);
-  }
-  80% {
-    transform: scale(0.8) perspective(1200px) rotateY(-15deg) rotateX(15deg)
-      translateZ(100px);
-  }
-  100% {
-    transform: scale(1) perspective(1200px) rotateY(-15deg) rotateX(15deg)
-      translateZ(100px);
-  }
-}
-
-@keyframes quizzButton {
-  0% {
-    transform: scale(0);
-  }
-  60% {
-    transform: scale(1);
-  }
-  80% {
-    transform: scale(0.8);
-  }
-  100% {
     transform: scale(1);
   }
 }

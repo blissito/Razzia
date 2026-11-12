@@ -13,7 +13,6 @@ const MultiAnswers = ({
   answers,
   onSubmit,
   readOnly,
-  fill,
 }: AnswerComponentProps) => {
   const [selected, setSelected] = useState<number[]>([])
   const { t } = useTranslation()
@@ -27,20 +26,11 @@ const MultiAnswers = ({
   }
 
   return (
-    <div
-      className={clsx(
-        "mx-auto mb-4 flex w-full max-w-7xl flex-col gap-2 px-2",
-        {
-          "flex-1": fill,
-        },
-      )}
-    >
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-3">
       <div
         className={clsx(
-          "grid gap-1 text-lg font-bold text-white md:text-xl",
-          fill
-            ? "flex-1 auto-rows-fr grid-cols-1 sm:grid-cols-2"
-            : "grid-cols-2",
+          "grid min-h-0 flex-1 auto-rows-fr grid-cols-2",
+          readOnly ? "gap-[0.85rem]" : "gap-2.5",
         )}
       >
         {answers.map((answer, key) => {
@@ -54,7 +44,7 @@ const MultiAnswers = ({
               onClick={() => toggle(key)}
               selected={readOnly ? undefined : isSelected}
               disabled={readOnly}
-              large={fill}
+              layout={readOnly ? "row" : "tile"}
             >
               {answer}
             </AnswerButton>
@@ -65,7 +55,7 @@ const MultiAnswers = ({
         <Button
           onClick={handleSubmit}
           disabled={selected.length === 0}
-          className="mx-auto w-full max-w-xs"
+          className="w-full"
         >
           {t("game:confirm")}
         </Button>

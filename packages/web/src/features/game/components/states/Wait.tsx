@@ -11,8 +11,8 @@ const Wait = ({ data: { text } }: Props) => {
 
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center">
-      <Loader className="h-30" />
-      <h2 className="mt-5 text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl lg:text-5xl">
+      <Loader className="h-16" />
+      <h2 className="text-foreground mt-5 text-center text-2xl leading-tight font-[650] md:text-3xl">
         {t(text)}
       </h2>
     </section>

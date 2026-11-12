@@ -64,5 +64,11 @@
   },
   "showQrCode": "Mostrar código QR",
   "streak": "Racha de respuestas",
-  "pinDigit": "Dígito {{position}} del PIN"
+  "pinDigit": "Dígito {{position}} del PIN",
+  "joinWithPin": "Entra a {{host}} y escribe el PIN",
+  "answeredCount": "{{answered}} de {{total}} ya contestaron",
+  "questionOf": "Pregunta {{current}} de {{total}}",
+  "usernameTitle": "¿Cómo te llamas?",
+  "enter": "Entrar",
+  "pinTitle": "Escribe el PIN que ves en la pantalla"
 }

@@ -3,6 +3,7 @@ import NotFound from "@razzia/web/components/NotFound"
 import { SocketProvider } from "@razzia/web/features/game/contexts/socket-context"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRootRoute, Outlet } from "@tanstack/react-router"
+import { MotionConfig } from "motion/react"
 import { Tooltip } from "radix-ui"
 import { useEffect } from "react"
 
@@ -36,7 +37,10 @@ export const Route = createRootRoute({
     <QueryClientProvider client={queryClient}>
       <SocketProvider>
         <Tooltip.Provider delayDuration={150}>
-          <GameLayout />
+          {/* Respeta `prefers-reduced-motion` en las animaciones de motion */}
+          <MotionConfig reducedMotion="user">
+            <GameLayout />
+          </MotionConfig>
         </Tooltip.Provider>
       </SocketProvider>
     </QueryClientProvider>

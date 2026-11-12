@@ -13,12 +13,8 @@ import Wait from "@razzia/web/features/game/components/states/Wait"
 
 import { STATUS } from "@razzia/common/types/game/status"
 
-export const ANSWERS_COLORS = [
-  "bg-[var(--color-answer-1)] text-white",
-  "bg-[var(--color-answer-2)] text-white",
-  "bg-[var(--color-answer-3)] text-white",
-  "bg-[var(--color-answer-4)] text-white",
-]
+// Tono de cada respuesta (ver `.tone-N` en index.css); siempre va junto a su letra
+export const ANSWERS_COLORS = ["tone-1", "tone-2", "tone-3", "tone-4"]
 
 export const ANSWERS_LABELS = ["A", "B", "C", "D"]
 

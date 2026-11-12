@@ -100,19 +100,33 @@ It can run that one game (the board's socket events and `PATCH /api/games/<id>/s
 
 Only this shape is accepted (any other field is a 400):
 
-| Field      | Rule                                                                                                                                                                                                           |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `appName`  | Up to 60 characters. Becomes the page title.                                                                                                                                                                   |
-| `colors`   | Theme color names (`primary`, `secondary`, `answer-1` … `answer-4`, `correct`, `background`, `foreground`, `muted`, `muted-foreground`, `accent`, `accent-foreground`) → a hex color or `rgb()`/`hsl()` value. |
-| `logo`     | `https://` URL. Shown on the lobby board.                                                                                                                                                                      |
-| `joinHint` | Up to 160 characters. Replaces the instance `joinHint` next to the host app's QR code (`join=`).                                                                                                               |
+| Field      | Rule                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| `appName`  | Up to 60 characters. Becomes the page title and the name on the brand bar of every game screen.  |
+| `colors`   | Theme color names (below) → a hex color or `rgb()`/`hsl()` value.                                |
+| `logo`     | `https://` URL. Shown on the brand bar; without it the bar shows the initials of `appName`.      |
+| `joinHint` | Up to 160 characters. Shown under the PIN on the lobby board, or next to the host app's QR code. |
+
+Color names. The whole game UI paints with them, so a light palette works as well as the default dark one:
+
+| Name                                          | Paints                                                                                                  |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `background`, `card`, `border`                | Page, cards and bars, 1px lines.                                                                        |
+| `foreground`, `muted-foreground`, `muted`     | Text, secondary text, soft fills (chips, timer track).                                                  |
+| `primary`, `primary-foreground`               | The filled button, timer, first place; and the text on top of it.                                       |
+| `correct`, `danger`                           | Right and wrong answer marks.                                                                           |
+| `answer-1` … `answer-4`                       | Base tone of answers A–D. The tile is that tone diluted in `background`.                                |
+| `answer-1-foreground` … `answer-4-foreground` | Letter and text of each answer. Default: the tone itself on a dark background, a darkened one on light. |
+| `secondary`, `accent`, `accent-foreground`    | Legacy names; they follow `background`, `border` and `foreground` unless set.                           |
+
+On a light `background` the client darkens `answer-N-foreground`, `correct` and `danger` by itself when the brand does not send them.
 
 ```
 GET /api/games/<gameId>/branding     (public)
 200 { "branding": { … } }   |   200 { "branding": null }   |   404 unknown game
 ```
 
-The game board and the player screen fetch it when they enter the game and put it on top of the instance theme; leaving the game restores the instance theme. The PIN entry page, where no game is known yet, keeps the instance theme.
+`POST /api/games/check` (the PIN check) also answers `subject`, `totalQuestions` and `branding`, so the name screen already carries the brand. The game board and the player screen fetch it when they enter the game and put it on top of the instance theme; leaving the game restores the instance theme. The PIN entry page, where no game is known yet, keeps the instance theme.
 
 ### Results
 

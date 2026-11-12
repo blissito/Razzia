@@ -65,5 +65,11 @@
   },
   "showQrCode": "Hiện mã QR",
   "streak": "Chuỗi trả lời đúng",
-  "pinDigit": "Chữ số {{position}} của mã PIN"
+  "pinDigit": "Chữ số {{position}} của mã PIN",
+  "joinWithPin": "Truy cập {{host}} và nhập mã PIN",
+  "answeredCount": "{{answered}} trên {{total}} đã trả lời",
+  "questionOf": "Câu hỏi {{current}} trên {{total}}",
+  "usernameTitle": "Bạn tên là gì?",
+  "enter": "Tham gia",
+  "pinTitle": "Nhập mã PIN bạn thấy trên màn hình"
 }

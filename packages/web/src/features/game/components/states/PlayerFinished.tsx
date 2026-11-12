@@ -11,18 +11,16 @@ const PlayerFinished = ({ data: { rank, subject } }: Props) => {
   const { t } = useTranslation()
 
   return (
-    <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 px-4">
-      <p className="text-center text-4xl font-bold text-white drop-shadow-lg md:text-5xl">
-        {subject}
-      </p>
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-3 text-center">
+      <p className="text-muted-foreground wrap-anywhere">{subject}</p>
 
-      <p className="text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl">
+      <p className="text-foreground text-[2.5rem] leading-none font-bold">
         {typeof rank === "number"
           ? t("game:rank", { count: rank, ordinal: true })
           : "—"}
       </p>
 
-      <p className="mt-2 rounded bg-black/40 px-6 py-2 text-2xl font-bold text-white">
+      <p className="bg-card border-border text-foreground mt-2 w-full rounded-[10px] border px-6 py-4 text-2xl font-[650] tabular-nums">
         {player?.points ?? 0} pts
       </p>
     </div>

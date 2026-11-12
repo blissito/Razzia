@@ -6,18 +6,16 @@ import type { PreparedComponentProps } from "@razzia/web/features/questions/type
 import clsx from "clsx"
 
 const PreparedAnswers = ({ totalAnswers }: PreparedComponentProps) => (
-  <div className="anim-quizz grid aspect-square w-60 grid-cols-2 gap-4 rounded-2xl bg-gray-700 p-5 md:w-60">
+  <div className="anim-quizz grid w-56 grid-cols-2 gap-3">
     {Array.from({ length: totalAnswers }).map((_, key) => (
       <div
         key={key}
         className={clsx(
-          "button shadow-inset flex aspect-square h-full w-full items-center justify-center rounded-2xl",
+          "grid aspect-square place-items-center rounded-[10px] text-4xl font-bold",
           ANSWERS_COLORS[key],
         )}
       >
-        <span className="text-2xl font-bold text-white md:text-3xl">
-          {ANSWERS_LABELS[key]}
-        </span>
+        {ANSWERS_LABELS[key]}
       </div>
     ))}
   </div>

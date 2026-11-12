@@ -34,11 +34,11 @@ const Summary = ({
         className="flex flex-col items-center gap-5"
       >
         <div className="flex flex-col items-center gap-2">
-          <p className="font-bold tracking-[0.25em] text-white uppercase drop-shadow-md">
+          <p className="text-muted-foreground font-semibold">
             {t("game:summary.title")}
           </p>
 
-          <h2 className="text-center text-3xl font-bold text-white drop-shadow-lg md:text-6xl">
+          <h2 className="text-foreground text-center text-3xl leading-tight font-[650] tracking-[-0.01em] wrap-anywhere md:text-[2.4rem]">
             {subject}
           </h2>
         </div>
@@ -56,17 +56,17 @@ const Summary = ({
               damping: 24,
               delay: 0.15 + index * 0.1,
             }}
-            className="bg-primary flex items-center gap-4 rounded-xl p-5 text-white"
+            className="bg-card border-border text-foreground flex items-center gap-4 rounded-[10px] border p-5"
           >
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-black/15">
+            <span className="bg-primary-soft text-primary-soft-foreground flex size-12 shrink-0 items-center justify-center rounded-lg">
               <Icon className="size-6" />
             </span>
 
             <div className="flex flex-col">
-              <span className="text-4xl leading-none font-bold drop-shadow-md">
+              <span className="text-4xl leading-none font-bold tabular-nums">
                 {value}
               </span>
-              <span className="text-sm font-semibold drop-shadow-md">
+              <span className="text-muted-foreground text-sm font-semibold">
                 {label}
               </span>
             </div>

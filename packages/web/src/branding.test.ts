@@ -55,6 +55,31 @@ describe("applyGameBranding", () => {
   })
 })
 
+describe("withDerivedColors", () => {
+  it("leaves a dark palette as the brand sent it", async () => {
+    const { withDerivedColors } = await loadModule()
+    const colors = { background: "#0E1317", primary: "#85DDCB" }
+
+    expect(withDerivedColors(colors)).toEqual(colors)
+    expect(withDerivedColors({ primary: "#85DDCB" })).toEqual({
+      primary: "#85DDCB",
+    })
+  })
+
+  it.each(["#FBF7F2", "#fff", "rgb(251, 247, 242)", "hsl(33, 53%, 97%)"])(
+    "darkens the answer text and the status colors on the light background %s",
+    async (background) => {
+      const { withDerivedColors } = await loadModule()
+      const derived = withDerivedColors({ background, correct: "#00aa00" })
+
+      expect(derived["answer-1-foreground"]).toContain("--color-answer-1")
+      expect(derived.danger).toBe("#b93a2b")
+      // Lo que la marca sí manda no se toca
+      expect(derived.correct).toBe("#00aa00")
+    },
+  )
+})
+
 describe("loadGameBranding", () => {
   it("drops a branding the validator refuses", async () => {
     const { loadGameBranding } = await loadModule()

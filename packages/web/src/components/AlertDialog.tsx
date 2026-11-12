@@ -48,7 +48,7 @@ const AlertDialog = ({
 
             <RadixAlertDialog.Action asChild>
               <Button
-                className="bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:brightness-95 active:brightness-90"
+                className="bg-danger text-background px-4 py-2 text-sm font-semibold hover:brightness-95 active:brightness-90"
                 onClick={onConfirm}
               >
                 {confirmLabel ?? t("common:confirm")}

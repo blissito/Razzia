@@ -47,8 +47,8 @@ const PlayerConnectionStatus = ({ timedOut = false }: Props) => {
       >
         <span
           className={clsx(
-            "rounded-full bg-white p-0.5 shadow",
-            stage === "lost" ? "text-red-500" : "text-primary",
+            "bg-card border-border rounded-full border p-0.5",
+            stage === "lost" ? "text-danger" : "text-primary",
           )}
         >
           <Clock className="size-4" />

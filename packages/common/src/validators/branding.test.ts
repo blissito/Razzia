@@ -47,6 +47,25 @@ describe("gameBrandingValidator", () => {
     expect(result.data?.appName).toBe("Acme")
   })
 
+  it("accepts a full light palette with the club v2 color names", () => {
+    const colors = {
+      background: "#FBF7F2",
+      card: "#FFFFFF",
+      border: "#EADFD2",
+      foreground: "#3A2412",
+      "muted-foreground": "#7A6553",
+      muted: "#F4EADF",
+      primary: "#E8743B",
+      "primary-foreground": "#2A1708",
+      danger: "#B93A2B",
+      "answer-1-foreground": "#0B5E4F",
+    }
+
+    expect(gameBrandingValidator.safeParse({ colors }).data?.colors).toEqual(
+      colors,
+    )
+  })
+
   it.each([
     [{ logo: "http://acme.example/logo.png" }],
     [{ logo: "data:image/svg+xml,<svg/>" }],
