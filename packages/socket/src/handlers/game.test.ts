@@ -465,6 +465,63 @@ describe("game socket handlers", () => {
   )
 })
 
+describe("host token (scoped manager)", () => {
+  const connectScoped = async (clientId: string, scope: string) => {
+    const { token } = await mintToken(clientId, SESSION_ROLES.MANAGER, scope)
+    const client = createClient(token)
+
+    await new Promise<void>((resolve) => {
+      client.once("connect", resolve)
+    })
+
+    return client
+  }
+
+  it("runs the game of its scope", async () => {
+    const game = new Game(io, "host", createQuizz([createQuestion()]))
+
+    Registry.getInstance().addGame(game)
+
+    const host = await connectScoped("host", game.gameId)
+    const reconnected = waitFor(host, EVENTS.MANAGER.SUCCESS_RECONNECT)
+
+    host.emit(EVENTS.MANAGER.RECONNECT, { gameId: game.gameId })
+
+    expect(await reconnected).toMatchObject({ gameId: game.gameId })
+
+    const locked = waitFor(host, EVENTS.MANAGER.LOCK_UPDATED)
+
+    host.emit(EVENTS.MANAGER.SET_LOCK, { gameId: game.gameId, locked: true })
+
+    expect(await locked).toBe(true)
+  })
+
+  it("cannot attach to or control a game outside its scope", async () => {
+    // Mismo `sub` que el dueño: sólo el `scope` separa las dos partidas
+    const { game } = await createGame("host")
+    const host = await connectScoped("host", "another-game")
+    const reset = waitFor(host, EVENTS.GAME.RESET)
+
+    host.emit(EVENTS.MANAGER.RECONNECT, { gameId: game.gameId })
+
+    expect(await reset).toBe("errors:game.expired")
+
+    const error = waitFor(host, EVENTS.GAME.ERROR_MESSAGE)
+
+    host.emit(EVENTS.MANAGER.SET_LOCK, { gameId: game.gameId, locked: true })
+
+    expect(await error).toBe("errors:auth.unauthorized")
+    expect(game.locked).toBe(false)
+    expect(game.manager.connected).toBe(true)
+
+    host.emit(EVENTS.MANAGER.LEAVE, { gameId: game.gameId })
+    host.emit(EVENTS.MANAGER.SET_LOCK, { gameId: game.gameId, locked: true })
+    await waitFor(host, EVENTS.GAME.ERROR_MESSAGE)
+
+    expect(Registry.getInstance().getGameById(game.gameId)).toBeDefined()
+  })
+})
+
 describe("socket payload validation", () => {
   it("rejects a non-object reconnect payload", async () => {
     const client = await connectAs("mallory")

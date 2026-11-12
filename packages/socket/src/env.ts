@@ -27,6 +27,15 @@ const envSchema = z.object({
         `IDENTITY_SECRET must be at least ${MIN_SECRET_LENGTH} characters`,
       ),
   ),
+  // Llave del servidor de la app anfitriona: crea partidas y lee resultados sin sesión de manager.
+  SERVICE_KEY: optional(
+    z
+      .string()
+      .min(
+        MIN_SECRET_LENGTH,
+        `SERVICE_KEY must be at least ${MIN_SECRET_LENGTH} characters`,
+      ),
+  ),
   // "1" refuses every join that does not carry a valid identity.
   REQUIRE_IDENTITY: optional(z.string()),
   GAME_SPEED: z.preprocess(
@@ -53,6 +62,8 @@ export const managerPassword = parsed.data.MANAGER_PASSWORD
 export const gameSpeed = parsed.data.GAME_SPEED
 
 export const identitySecret = parsed.data.IDENTITY_SECRET
+
+export const serviceKey = parsed.data.SERVICE_KEY
 
 export const requireIdentity =
   Boolean(identitySecret) && parsed.data.REQUIRE_IDENTITY === "1"

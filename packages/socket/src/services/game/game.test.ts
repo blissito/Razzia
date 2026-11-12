@@ -484,6 +484,25 @@ describe("survey flow", () => {
   })
 })
 
+describe("hosted game result", () => {
+  it("saves the tenant and the gameId with the result", async () => {
+    const { game, status, start } = setup(createQuizz([createQuestion()]))
+
+    game.tenant = "acme"
+    await start()
+    game.advance()
+    await vi.advanceTimersByTimeAsync(TICK_MS)
+    game.advance()
+
+    expect(status(MANAGER)?.name).toBe(STATUS.FINISHED)
+    expect(getResultsMeta({ gameId: game.gameId })).toMatchObject([
+      { gameId: game.gameId, tenant: "acme" },
+    ])
+    expect(getResultsMeta({ gameId: "another-game" })).toEqual([])
+    expect(getResultsMeta({ tenant: "other" })).toEqual([])
+  })
+})
+
 describe("player connection updates", () => {
   it("tells the manager when a player's connection times out", () => {
     const { game, sockets, lastEvent } = setup(createQuizz([createQuestion()]))

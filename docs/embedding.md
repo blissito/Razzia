@@ -41,8 +41,92 @@ The token travels in the URL hash, which never reaches the server, its access lo
 
 | `IDENTITY_SECRET` | Shared secret (32+ characters) for signed player identities. |
 | `REQUIRE_IDENTITY` | `1` refuses every join without a valid identity, so a guessed PIN is useless to outsiders. |
+| `SERVICE_KEY` | Secret (32+ characters) of the host app's server. Creates games and reads results without a manager session (below). |
 
 nginx also caps attempts on `/api/auth/manager` and `/api/games/check`.
+
+## Multi-tenant engine
+
+A host app that owns its quizzes and results uses the instance as a game engine: nothing of a tenant has to live here, and the browser of the person running the game never holds an instance-wide credential. The older flow above (manager password, `quizzId`) keeps working unchanged.
+
+### Service key
+
+The host app's **server** sends `Authorization: Bearer <SERVICE_KEY>`. It can call `POST /api/games` and `/api/results` (list, read, delete), and nothing else: `/api/quizz` and `/api/media` still need a manager session. Never ship the key to a browser.
+
+### Creating a game
+
+```
+POST /api/games
+Authorization: Bearer <SERVICE_KEY>          (or a manager session token)
+
+{
+  "quizz": { "gameMode": "quiz", "subject": "…", "questions": [ … ] },
+  "tenant": "acme-42",
+  "requireIdentity": true,
+  "branding": {
+    "appName": "Acme Quiz",
+    "colors": { "primary": "#85DDCB", "answer-1": "rgb(230, 159, 0)" },
+    "logo": "https://acme.example/logo.png",
+    "joinHint": "Join from the call"
+  }
+}
+```
+
+- `quizz` **or** `quizzId`, exactly one. An inline `quizz` has the same shape as a saved one (`POST /api/quizz`), is never written to disk and lives only as long as the game. Limits: 100 questions; `subject` 200 characters, `question` 1000, each answer 300, `note` 2000, `category` 100, media `url` 2048; request body 256 KB (413 above that).
+- `tenant` (optional): opaque label, up to 64 characters of `A-Z a-z 0-9 _ -`. It is saved with the result.
+- `branding` (optional): see below.
+- Validation errors answer 400 with `{ "error": "<key>" }`.
+
+Response, `201`:
+
+```
+{ "gameId": "…", "inviteCode": "123456" }                                   <- manager session
+{ "gameId": "…", "inviteCode": "123456", "hostToken": "<jwt>", "hostTokenExpiresAt": 1790000000 }   <- service key
+```
+
+Invite codes are unique among live games.
+
+### Host token
+
+`hostToken` is a manager token that owns the new game and carries `scope: <gameId>`. Hand it to the browser of whoever runs the game:
+
+```
+https://quiz.example.com/embed/manager#token=<hostToken>&gameId=<id>&join=<https url>
+```
+
+It can run that one game (the board's socket events and `PATCH /api/games/<id>/settings`) and nothing else: `/api/quizz/*`, `/api/results/*`, `/api/media/*`, `POST /api/games` and the settings of any other game answer 403, and its socket cannot attach to another game. It lasts 12 hours. With it the board has no instance panel to go back to: the lobby has no exit button and the final screen stays up, so the host app closes the frame. `#token=<hostToken>&to=quizz` is not supported (the editor needs an instance manager).
+
+### Per-game branding
+
+Only this shape is accepted (any other field is a 400):
+
+| Field      | Rule                                                                                                                                                                                                           |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appName`  | Up to 60 characters. Becomes the page title.                                                                                                                                                                   |
+| `colors`   | Theme color names (`primary`, `secondary`, `answer-1` … `answer-4`, `correct`, `background`, `foreground`, `muted`, `muted-foreground`, `accent`, `accent-foreground`) → a hex color or `rgb()`/`hsl()` value. |
+| `logo`     | `https://` URL. Shown on the lobby board.                                                                                                                                                                      |
+| `joinHint` | Up to 160 characters. Replaces the instance `joinHint` next to the host app's QR code (`join=`).                                                                                                               |
+
+```
+GET /api/games/<gameId>/branding     (public)
+200 { "branding": { … } }   |   200 { "branding": null }   |   404 unknown game
+```
+
+The game board and the player screen fetch it when they enter the game and put it on top of the instance theme; leaving the game restores the instance theme. The PIN entry page, where no game is known yet, keeps the instance theme.
+
+### Results
+
+The result file now carries `tenant` next to `gameId`, and the list can be narrowed:
+
+```
+GET /api/results                      every result
+GET /api/results?gameId=<id>          the result of one game
+GET /api/results?tenant=<label>       the results of one tenant
+-> { "results": [{ "id", "gameId", "tenant", "gameMode", "subject", "date", "playerCount" }] }
+GET /api/results/<id>     DELETE /api/results/<id>
+```
+
+A host app that keeps its own copy reads the result after the game and deletes it here.
 
 ## Signed player identity
 

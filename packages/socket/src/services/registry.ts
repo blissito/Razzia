@@ -44,9 +44,18 @@ class Registry {
     )
   }
 
-  getManagerGame(gmageId: string, clientId: string): Game | undefined {
+  // `scope` viene de un token de anfitrión y sólo deja pasar su propia partida
+  getManagerGame(
+    gameId: string,
+    clientId: string,
+    scope?: string,
+  ): Game | undefined {
+    if (scope !== undefined && scope !== gameId) {
+      return undefined
+    }
+
     return this.games.find(
-      (g) => g.gameId === gmageId && g.manager.clientId === clientId,
+      (g) => g.gameId === gameId && g.manager.clientId === clientId,
     )
   }
 

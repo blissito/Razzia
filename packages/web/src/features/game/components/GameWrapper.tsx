@@ -118,7 +118,7 @@ const GameWrapper = ({
                 </Button>
               )}
 
-              {manager && next && (
+              {manager && next && onNext && (
                 <div className="ml-auto flex gap-2">
                   {statusName === STATUS.SHOW_ROOM && (
                     <RoomLockButton className="hover:bg-accent rounded-lg bg-white px-3 text-black" />

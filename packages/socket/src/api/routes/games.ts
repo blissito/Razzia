@@ -1,4 +1,5 @@
 import { zValidator } from "@hono/zod-validator"
+import { SESSION_ROLES } from "@razzia/common/constants"
 import {
   checkGameValidator,
   createGameValidator,
@@ -6,47 +7,101 @@ import {
   joinGameValidator,
 } from "@razzia/common/validators/game"
 import { apiFactory } from "@razzia/socket/api/factory"
-import { requireManager, requireSession } from "@razzia/socket/api/middleware"
+import {
+  requireGameManager,
+  requireManagerOrService,
+  requireSession,
+} from "@razzia/socket/api/middleware"
 import { i18nHook } from "@razzia/socket/api/validation"
-import { mintJoinTicket } from "@razzia/socket/services/auth"
+import {
+  mintJoinTicket,
+  mintToken,
+  newClientId,
+} from "@razzia/socket/services/auth"
 import { getQuizz } from "@razzia/socket/services/config"
 import { identitySecret, requireIdentity } from "@razzia/socket/env"
 import { verifyIdentity } from "@razzia/socket/services/identity"
 import Game from "@razzia/socket/services/game"
 import { getIo } from "@razzia/socket/services/io"
 import Registry from "@razzia/socket/services/registry"
+import { bodyLimit } from "hono/body-limit"
 import { StatusCodes } from "http-status-codes"
+
+// Un quiz en línea de 100 preguntas cabe de sobra
+const MAX_CREATE_BODY = 256 * 1024
 
 const routes = apiFactory
   .createApp()
   .post(
     "/",
-    requireManager,
+    bodyLimit({
+      maxSize: MAX_CREATE_BODY,
+      onError: (c) =>
+        c.json(
+          { error: "errors:invalidRequest" },
+          StatusCodes.REQUEST_TOO_LONG,
+        ),
+    }),
+    requireManagerOrService,
     zValidator("json", createGameValidator, i18nHook),
-    (c) => {
-      const { quizzId, requireIdentity: membersOnly } = c.req.valid("json")
-      const quizz = getQuizz().find((q) => q.id === quizzId)
+    async (c) => {
+      const body = c.req.valid("json")
+      const quizz = body.quizz ?? getQuizz().find((q) => q.id === body.quizzId)
 
       if (!quizz) {
         return c.json({ error: "errors:quizz.notFound" }, StatusCodes.NOT_FOUND)
       }
 
+      // La app anfitriona no tiene sesión: la partida nace con un dueño nuevo
+      const isService = c.get("service")
+      const managerId = isService ? newClientId() : c.get("claims").sub
       const registry = Registry.getInstance()
-      const game = new Game(getIo(), c.get("claims").sub, quizz)
+      const game = new Game(getIo(), managerId, quizz)
 
-      game.requireIdentity = Boolean(membersOnly && identitySecret)
+      game.requireIdentity = Boolean(body.requireIdentity && identitySecret)
+      game.tenant = body.tenant
+      game.branding = body.branding ?? null
       registry.addGame(game)
       registry.markGameAsEmpty(game)
 
+      if (!isService) {
+        return c.json(
+          { gameId: game.gameId, inviteCode: game.inviteCode },
+          StatusCodes.CREATED,
+        )
+      }
+
+      // Token de anfitrión: manager sólo de esta partida, para el navegador de quien la conduce
+      const host = await mintToken(
+        managerId,
+        SESSION_ROLES.MANAGER,
+        game.gameId,
+      )
+
       return c.json(
-        { gameId: game.gameId, inviteCode: game.inviteCode },
+        {
+          gameId: game.gameId,
+          inviteCode: game.inviteCode,
+          hostToken: host.token,
+          hostTokenExpiresAt: host.expiresAt,
+        },
         StatusCodes.CREATED,
       )
     },
   )
+  // Pública: la pantalla del jugador la pide al entrar a la partida
+  .get("/:gameId/branding", (c) => {
+    const game = Registry.getInstance().getGameById(c.req.param("gameId"))
+
+    if (!game) {
+      return c.json({ error: "errors:game.notFound" }, StatusCodes.NOT_FOUND)
+    }
+
+    return c.json({ branding: game.branding })
+  })
   .patch(
     "/:gameId/settings",
-    requireManager,
+    requireGameManager,
     zValidator("json", gameSettingsValidator, i18nHook),
     (c) => {
       const game = Registry.getInstance().getGameById(c.req.param("gameId"))

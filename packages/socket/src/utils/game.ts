@@ -4,7 +4,7 @@ import type { Socket } from "@razzia/common/types/game/socket"
 import Game from "@razzia/socket/services/game"
 import Registry from "@razzia/socket/services/registry"
 import { SECOND_MS } from "@razzia/socket/utils/sleep"
-import { getClientId } from "@razzia/socket/utils/socket"
+import { canManageGame, getClientId } from "@razzia/socket/utils/socket"
 
 type GameCallback = (_game: Game) => void | Promise<void>
 
@@ -24,7 +24,10 @@ export const withManagerGame = (
     return
   }
 
-  if (game.manager.clientId !== getClientId(socket)) {
+  if (
+    game.manager.clientId !== getClientId(socket) ||
+    !canManageGame(socket, game.gameId)
+  ) {
     socket.emit("game:errorMessage", "errors:auth.unauthorized")
 
     return
@@ -66,6 +69,25 @@ export const createInviteCode = (length = 6) => {
   }
 
   return result
+}
+
+const MAX_INVITE_CODE_ATTEMPTS = 100
+
+// Con muchas partidas vivas dos códigos de 6 dígitos pueden coincidir: se vuelve a tirar.
+export const createUniqueInviteCode = (
+  isTaken: (_code: string) => boolean = (code) =>
+    Registry.getInstance().getGameByInviteCode(code) !== undefined,
+  generate: () => string = createInviteCode,
+): string => {
+  for (let attempt = 0; attempt < MAX_INVITE_CODE_ATTEMPTS; attempt += 1) {
+    const code = generate()
+
+    if (!isTaken(code)) {
+      return code
+    }
+  }
+
+  throw new Error("No free invite code")
 }
 
 export const orderToPoint = (

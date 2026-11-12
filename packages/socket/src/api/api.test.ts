@@ -1,7 +1,11 @@
 import { QUIZZ_MODES, SESSION_ROLES } from "@razzia/common/constants"
 import type { SessionResponse } from "@razzia/common/types/auth"
 import { app } from "@razzia/socket/app"
-import { mintToken, verifyJoinTicket } from "@razzia/socket/services/auth"
+import {
+  mintToken,
+  verifyJoinTicket,
+  verifyToken,
+} from "@razzia/socket/services/auth"
 import {
   getPath,
   initConfig,
@@ -419,5 +423,287 @@ describe("media", () => {
 
     expect(response.status).toBe(status)
     expect(await json(response)).toEqual({ error })
+  })
+})
+
+const SERVICE_KEY = "test-service-key-that-is-at-least-32-chars"
+
+interface HostedGame {
+  gameId: string
+  inviteCode: string
+  hostToken: string
+  hostTokenExpiresAt: number
+}
+
+const inlineQuizz = () => createQuizz([createQuestion()])
+
+const createHostedGame = async (extra: Record<string, unknown> = {}) =>
+  json<HostedGame>(
+    await request("/games", {
+      method: "POST",
+      token: SERVICE_KEY,
+      body: { quizz: inlineQuizz(), ...extra },
+    }),
+  )
+
+describe("inline quizz", () => {
+  it("creates a game from a quizz sent in the request, without saving it", async () => {
+    const response = await request("/games", {
+      method: "POST",
+      token: managerToken,
+      body: { quizz: inlineQuizz(), tenant: "acme_1" },
+    })
+
+    expect(response.status).toBe(StatusCodes.CREATED)
+
+    const body = await json<Record<string, string>>(response)
+    const game = Registry.getInstance().getGameById(body.gameId)
+
+    expect(body).not.toHaveProperty("hostToken")
+    expect(game?.tenant).toBe("acme_1")
+    expect(fs.readdirSync(getPath("quizz"))).toHaveLength(1)
+  })
+
+  it.each([
+    [
+      "an invalid quizz",
+      { quizz: createQuizz([]) },
+      "errors:quizz.noQuestions",
+    ],
+    [
+      "more than 100 questions",
+      {
+        quizz: createQuizz(Array.from({ length: 101 }, () => createQuestion())),
+      },
+      "errors:invalidRequest",
+    ],
+    [
+      "an oversized field",
+      { quizz: createQuizz([createQuestion({ question: "x".repeat(1001) })]) },
+      "errors:invalidRequest",
+    ],
+    [
+      "both quizzId and quizz",
+      { quizzId: "some-id", quizz: inlineQuizz() },
+      "errors:quizz.notFound",
+    ],
+    ["neither quizzId nor quizz", {}, "errors:quizz.notFound"],
+    [
+      "a tenant with forbidden characters",
+      { quizz: inlineQuizz(), tenant: "acme/../x" },
+      "errors:invalidRequest",
+    ],
+  ])("rejects %s", async (_label, body, error) => {
+    const response = await request("/games", {
+      method: "POST",
+      token: managerToken,
+      body,
+    })
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST)
+    expect(await json(response)).toEqual({ error })
+    expect(Registry.getInstance().getGameCount()).toBe(0)
+  })
+
+  it("refuses a request body over the limit", async () => {
+    const response = await request("/games", {
+      method: "POST",
+      token: managerToken,
+      body: { quizz: inlineQuizz(), padding: "x".repeat(300 * 1024) },
+    })
+
+    expect(response.status).toBe(StatusCodes.REQUEST_TOO_LONG)
+  })
+})
+
+describe("service key and host token", () => {
+  it("lets the service key create a game and returns a scoped host token", async () => {
+    const { gameId, inviteCode, hostToken, hostTokenExpiresAt } =
+      await createHostedGame()
+    const claims = await verifyToken(hostToken)
+    const game = Registry.getInstance().getGameById(gameId)
+
+    expect(inviteCode).toMatch(/^\d{6}$/u)
+    expect(claims).toMatchObject({
+      role: SESSION_ROLES.MANAGER,
+      scope: gameId,
+      exp: hostTokenExpiresAt,
+    })
+    expect(game?.manager.clientId).toBe(claims.sub)
+  })
+
+  it("gives every hosted game its own owner", async () => {
+    const first = await verifyToken((await createHostedGame()).hostToken)
+    const second = await verifyToken((await createHostedGame()).hostToken)
+
+    expect(first.sub).not.toBe(second.sub)
+  })
+
+  it("refuses a wrong service key", async () => {
+    const response = await request("/games", {
+      method: "POST",
+      token: `${SERVICE_KEY}x`,
+      body: { quizz: inlineQuizz() },
+    })
+
+    expect(response.status).toBe(StatusCodes.UNAUTHORIZED)
+    expect((await request("/results", { token: "nope" })).status).toBe(
+      StatusCodes.UNAUTHORIZED,
+    )
+  })
+
+  it("keeps the service key out of the quizz and media routes", async () => {
+    expect((await request("/quizz", { token: SERVICE_KEY })).status).toBe(
+      StatusCodes.UNAUTHORIZED,
+    )
+    expect((await request("/media", { token: SERVICE_KEY })).status).toBe(
+      StatusCodes.UNAUTHORIZED,
+    )
+  })
+
+  it.each([
+    ["GET", "/quizz"],
+    ["POST", "/quizz"],
+    ["GET", "/quizz/some-id"],
+    ["GET", "/results"],
+    ["GET", "/results/some-id"],
+    ["DELETE", "/results/some-id"],
+    ["GET", "/media"],
+    ["DELETE", "/media/some.png"],
+    ["POST", "/games"],
+  ])("forbids %s %s to a host token", async (method, path) => {
+    const { hostToken } = await createHostedGame()
+    const response = await request(path, {
+      method,
+      token: hostToken,
+      body: method === "POST" ? { quizz: inlineQuizz() } : undefined,
+    })
+
+    expect(response.status).toBe(StatusCodes.FORBIDDEN)
+    expect(Registry.getInstance().getGameCount()).toBe(1)
+  })
+
+  it("lets a host token change the settings of its own game only", async () => {
+    const mine = await createHostedGame()
+    const other = await createHostedGame()
+    const body = { answersOnly: true }
+    const patch = (gameId: string) =>
+      request(`/games/${gameId}/settings`, {
+        method: "PATCH",
+        token: mine.hostToken,
+        body,
+      })
+
+    expect(await json(await patch(mine.gameId))).toMatchObject({
+      settings: body,
+    })
+    expect((await patch(other.gameId)).status).toBe(StatusCodes.FORBIDDEN)
+    expect(
+      Registry.getInstance().getGameById(other.gameId)?.settings.answersOnly,
+    ).toBe(false)
+  })
+
+  it("lets the service key list, read and delete results", async () => {
+    saveResult({
+      id: "hosted",
+      gameId: "game-1",
+      tenant: "acme",
+      gameMode: QUIZZ_MODES.QUIZ,
+      subject: "Subject",
+      date: "2026-01-01T00:00:00.000Z",
+      players: [],
+      questions: [],
+    })
+
+    const list = await request("/results", { token: SERVICE_KEY })
+
+    expect(await json(list)).toMatchObject({
+      results: [{ id: "hosted", gameId: "game-1", tenant: "acme" }],
+    })
+    expect(
+      await json(await request("/results/hosted", { token: SERVICE_KEY })),
+    ).toMatchObject({ tenant: "acme" })
+    expect(
+      (
+        await request("/results/hosted", {
+          method: "DELETE",
+          token: SERVICE_KEY,
+        })
+      ).status,
+    ).toBe(StatusCodes.NO_CONTENT)
+  })
+})
+
+describe("results filter", () => {
+  it("filters the list by gameId and keeps the full list without it", async () => {
+    const result = (id: string, gameId?: string) => ({
+      id,
+      gameId,
+      gameMode: QUIZZ_MODES.QUIZ,
+      subject: id,
+      date: "2026-01-01T00:00:00.000Z",
+      players: [],
+      questions: [],
+    })
+
+    saveResult(result("first", "game-1"))
+    saveResult(result("second", "game-2"))
+    saveResult(result("legacy"))
+
+    const ids = async (query: string) =>
+      (
+        await json<{ results: Array<{ id: string }> }>(
+          await request(`/results${query}`, { token: managerToken }),
+        )
+      ).results.map((r) => r.id)
+
+    expect(await ids("?gameId=game-2")).toEqual(["second"])
+    expect(await ids("?gameId=missing")).toEqual([])
+    expect((await ids("")).toSorted()).toEqual(["first", "legacy", "second"])
+  })
+})
+
+describe("game branding", () => {
+  const branding = {
+    appName: "Acme Quiz",
+    colors: { primary: "#85DDCB", "answer-1": "rgb(10, 20, 30)" },
+    logo: "https://acme.example/logo.png",
+    joinHint: "Entra desde la llamada",
+  }
+
+  it("stores the branding and serves it without a session", async () => {
+    const branded = await createHostedGame({ branding })
+    const plain = await createHostedGame()
+
+    expect(
+      await json(await request(`/games/${branded.gameId}/branding`)),
+    ).toEqual({ branding })
+    expect(
+      await json(await request(`/games/${plain.gameId}/branding`)),
+    ).toEqual({ branding: null })
+    expect((await request("/games/missing/branding")).status).toBe(
+      StatusCodes.NOT_FOUND,
+    )
+  })
+
+  it.each([
+    ["a color that loads a url", { colors: { primary: "url(https://x.y/a)" } }],
+    ["a color that closes the rule", { colors: { primary: "#fff;color:red" } }],
+    ["a css variable", { colors: { primary: "var(--color-primary)" } }],
+    ["an unknown color name", { colors: { "primary;x": "#fff" } }],
+    ["a logo over http", { logo: "http://acme.example/logo.png" }],
+    ["a javascript logo", { logo: ["javascript", "alert(1)"].join(":") }],
+    ["a field outside the whitelist", { background: "https://x.y/a.png" }],
+    ["a long app name", { appName: "x".repeat(61) }],
+    ["a long join hint", { joinHint: "x".repeat(161) }],
+  ])("rejects %s", async (_label, bad) => {
+    const response = await request("/games", {
+      method: "POST",
+      token: SERVICE_KEY,
+      body: { quizz: inlineQuizz(), branding: bad },
+    })
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST)
+    expect(Registry.getInstance().getGameCount()).toBe(0)
   })
 })

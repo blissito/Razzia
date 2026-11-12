@@ -87,6 +87,7 @@ export const createSocketServer = (server: ServerType): Server => {
         socket.data = {
           clientId: claims.sub,
           role: claims.role,
+          scope: claims.scope,
         }
 
         next()

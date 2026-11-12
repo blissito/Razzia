@@ -82,6 +82,13 @@ export const isExpired = (skew = EXPIRY_SKEW_SECONDS): boolean => {
   return claims.exp - skew <= Math.floor(Date.now() / 1000)
 }
 
+// Token de anfitrión: manager de una sola partida, sin acceso al panel de la instancia
+export const getScope = (): string | null =>
+  isExpired() ? null : (getClaims()?.scope ?? null)
+
+export const isInstanceManager = (): boolean =>
+  getRole() === SESSION_ROLES.MANAGER && getScope() === null
+
 export const getRole = (): SessionRole => {
   if (isExpired()) {
     return SESSION_ROLES.PLAYER

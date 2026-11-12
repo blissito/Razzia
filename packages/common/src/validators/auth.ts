@@ -13,6 +13,7 @@ export const inviteCodeValidator = z
 export const sessionClaimsValidator = z.object({
   sub: z.string().min(1),
   role: z.enum(SESSION_ROLES),
+  scope: z.string().min(1).optional(),
   iat: z.number(),
   exp: z.number(),
 })

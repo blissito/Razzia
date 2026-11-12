@@ -18,6 +18,8 @@ import type { z } from "zod"
 export interface SocketData {
   clientId: string
   role: SessionRole
+  /** Host token: the only game this socket may manage. */
+  scope?: string
 }
 
 export type Server = ServerIO<

@@ -6,6 +6,7 @@ import {
   useEvent,
   useSocket,
 } from "@razzia/web/features/game/contexts/socket-context"
+import { useGameBranding } from "@razzia/web/features/game/hooks/useGameBranding"
 import { useSocketConnection } from "@razzia/web/features/game/hooks/useSocketConnection"
 import { useManagerStore } from "@razzia/web/features/game/stores/manager"
 import { useQuestionStore } from "@razzia/web/features/game/stores/question"
@@ -14,8 +15,10 @@ import {
   GAME_STATE_COMPONENTS_MANAGER,
   isKeyOf,
 } from "@razzia/web/features/game/utils/constants"
+import GameBackground from "@razzia/web/components/GameBackground"
+import { getScope } from "@razzia/web/lib/session"
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
 
@@ -27,7 +30,13 @@ const ManagerGamePage = () => {
   const { setQuestionStates } = useQuestionStore()
   const { t } = useTranslation()
 
+  // Token de anfitrión (app que incrusta el tablero): no existe el panel de la
+  // instancia a dónde regresar, así que el tablero se queda en su última pantalla.
+  const [hosted] = useState(() => getScope() !== null)
+  const [endedMessage, setEndedMessage] = useState<string | null>(null)
+
   useSocketConnection()
+  useGameBranding(gameIdParam)
 
   useEvent(EVENTS.GAME.STATUS, ({ name, data }) => {
     if (name in GAME_STATE_COMPONENTS_MANAGER) {
@@ -69,7 +78,12 @@ const ManagerGamePage = () => {
   })
 
   useEvent(EVENTS.GAME.RESET, (message) => {
-    navigate({ to: "/manager/config" })
+    if (hosted) {
+      setEndedMessage(message)
+    } else {
+      navigate({ to: "/manager/config" })
+    }
+
     resetManager()
     setQuestionStates(null)
     toast.error(t(message))
@@ -112,15 +126,31 @@ const ManagerGamePage = () => {
       ? GAME_STATE_COMPONENTS_MANAGER[status.name]
       : null
 
+  if (!status && endedMessage) {
+    return (
+      <section className="relative flex min-h-dvh items-center justify-center">
+        <GameBackground />
+        <h1 className="z-10 px-6 text-center text-4xl font-bold text-white drop-shadow-lg">
+          {t(endedMessage)}
+        </h1>
+      </section>
+    )
+  }
+
   if (!status) {
     return null
   }
 
+  const isOver =
+    status.name === STATUS.FINISHED || status.name === STATUS.SUMMARY
+
   return (
     <GameWrapper
       statusName={status.name}
-      onNext={handleSkip}
-      onBack={status.name === STATUS.SHOW_ROOM ? handleBack : undefined}
+      onNext={hosted && isOver ? undefined : handleSkip}
+      onBack={
+        status.name === STATUS.SHOW_ROOM && !hosted ? handleBack : undefined
+      }
       manager
     >
       {CurrentComponent && <CurrentComponent data={status.data as never} />}

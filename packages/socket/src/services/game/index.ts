@@ -1,4 +1,5 @@
 import { createDefaultGameSettings, EVENTS } from "@razzia/common/constants"
+import type { GameBranding } from "@razzia/common/validators/branding"
 import type {
   GameSettings,
   Player,
@@ -16,7 +17,7 @@ import { CooldownTimer } from "@razzia/socket/services/game/cooldown-timer"
 import { PlayerManager } from "@razzia/socket/services/game/player-manager"
 import { RoundManager } from "@razzia/socket/services/game/round-manager"
 import Registry from "@razzia/socket/services/registry"
-import { createInviteCode } from "@razzia/socket/utils/game"
+import { createUniqueInviteCode } from "@razzia/socket/utils/game"
 import { createNickname } from "@razzia/socket/utils/nickname"
 import { SECOND_MS } from "@razzia/socket/utils/sleep"
 import { getClientId } from "@razzia/socket/utils/socket"
@@ -35,6 +36,10 @@ class Game {
   private _locked = false
   // Set at creation by an embedding host app: only signed identities may join
   requireIdentity = false
+  // Etiqueta opaca de la app anfitriona; viaja al archivo de resultados
+  tenant: string | undefined = undefined
+  // Marca de la app anfitriona para esta partida (ya validada en la ruta)
+  branding: GameBranding | null = null
 
   private readonly io: Server
   private readonly _manager: {
@@ -65,7 +70,7 @@ class Game {
   constructor(io: Server, managerClientId: string, quizz: Quizz) {
     this.io = io
     this.gameId = uuid()
-    this.inviteCode = createInviteCode()
+    this.inviteCode = createUniqueInviteCode()
     this.gameMode = quizz.gameMode
     this._manager = {
       id: "",
@@ -96,7 +101,8 @@ class Game {
         this.playerStatus.clear()
         this.managerStatus = null
       },
-      onGameFinished: saveResult,
+      onGameFinished: (result) =>
+        saveResult({ ...result, tenant: this.tenant }),
       getExternalId: (clientId) => this.externalIds.get(clientId),
       getSettings: () => this._settings,
     })

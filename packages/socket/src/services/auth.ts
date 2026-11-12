@@ -32,11 +32,17 @@ const parseClaims = (payload: unknown): SessionClaims => {
 export const mintToken = async (
   sub: string,
   role: SessionRole,
+  // Sólo para el token de anfitrión: lo amarra a una partida
+  scope?: string,
 ): Promise<SessionResponse> => {
   const iat = Math.floor(Date.now() / 1000)
   const exp = iat + (role === SESSION_ROLES.MANAGER ? MANAGER_TTL : PLAYER_TTL)
 
-  const token = await sign({ sub, role, iat, exp }, jwtSecret, ALGORITHM)
+  const token = await sign(
+    { sub, role, ...(scope ? { scope } : {}), iat, exp },
+    jwtSecret,
+    ALGORITHM,
+  )
 
   return { token, clientId: sub, role, expiresAt: exp }
 }

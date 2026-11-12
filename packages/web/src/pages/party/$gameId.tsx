@@ -7,6 +7,7 @@ import {
   useEvent,
   useSocket,
 } from "@razzia/web/features/game/contexts/socket-context"
+import { useGameBranding } from "@razzia/web/features/game/hooks/useGameBranding"
 import { useSocketConnection } from "@razzia/web/features/game/hooks/useSocketConnection"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { useQuestionStore } from "@razzia/web/features/game/stores/question"
@@ -30,6 +31,7 @@ const PlayerGamePage = () => {
   const syncedRef = useRef(false)
 
   useSocketConnection()
+  useGameBranding(gameIdParam)
 
   useEffect(() => {
     if (!isConnected) {

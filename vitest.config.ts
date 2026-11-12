@@ -35,6 +35,7 @@ export default defineConfig({
           env: {
             MANAGER_PASSWORD: "test-password",
             JWT_SECRET: "test-secret-that-is-at-least-32-characters",
+            SERVICE_KEY: "test-service-key-that-is-at-least-32-chars",
           },
         },
       },

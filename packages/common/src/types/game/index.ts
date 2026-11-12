@@ -130,6 +130,8 @@ export interface GameResult {
   id: string
   /** Absent in results written before the embedding additions. */
   gameId?: string
+  /** Opaque label the host app sent when it created the game. */
+  tenant?: string
   gameMode: QuizzMode
   subject: string
   date: string
@@ -139,6 +141,8 @@ export interface GameResult {
 
 export interface GameResultMeta {
   id: string
+  gameId?: string
+  tenant?: string
   gameMode: QuizzMode
   subject: string
   date: string

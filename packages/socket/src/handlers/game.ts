@@ -9,6 +9,7 @@ import { getClientId } from "@razzia/socket/utils/socket"
 export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
   const registry = Registry.getInstance()
   const clientId = getClientId(socket)
+  const { scope } = socket.data
 
   const closeLobby = (game: Game) => {
     game.abortCooldown()
@@ -64,7 +65,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
   })
 
   socket.on(EVENTS.MANAGER.RECONNECT, ({ gameId }) => {
-    const game = registry.getManagerGame(gameId, clientId)
+    const game = registry.getManagerGame(gameId, clientId, scope)
 
     if (game) {
       game.reconnect(socket)
@@ -126,7 +127,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
   )
 
   socket.on(EVENTS.MANAGER.LEAVE, ({ gameId }) => {
-    const game = registry.getManagerGame(gameId, clientId)
+    const game = registry.getManagerGame(gameId, clientId, scope)
 
     if (game) {
       console.log(`Manager left game ${game.inviteCode}`)

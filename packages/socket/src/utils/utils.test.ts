@@ -1,6 +1,11 @@
 import { createQuestion } from "@razzia/socket/test/fixtures"
 import { normalizeFilename } from "@razzia/socket/utils/file"
-import { orderToPoint, timeToPoint } from "@razzia/socket/utils/game"
+import Registry from "@razzia/socket/services/registry"
+import {
+  createUniqueInviteCode,
+  orderToPoint,
+  timeToPoint,
+} from "@razzia/socket/utils/game"
 import { createNickname } from "@razzia/socket/utils/nickname"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -18,6 +23,36 @@ describe("orderToPoint", () => {
 
   it("gives full points to a lone player", () => {
     expect(orderToPoint(0, 1, 200)).toBe(200)
+  })
+})
+
+describe("createUniqueInviteCode", () => {
+  it("draws again while the code belongs to a live game", () => {
+    const codes = ["111111", "111111", "222222"]
+    const generate = vi.fn(() => codes.shift() ?? "999999")
+
+    expect(createUniqueInviteCode((code) => code === "111111", generate)).toBe(
+      "222222",
+    )
+    expect(generate).toHaveBeenCalledTimes(3)
+  })
+
+  it("checks the registry by default", () => {
+    const lookup = vi
+      .spyOn(Registry.getInstance(), "getGameByInviteCode")
+      .mockReturnValueOnce({} as never)
+      .mockReturnValue(undefined)
+
+    expect(createUniqueInviteCode()).toMatch(/^\d{6}$/u)
+    expect(lookup).toHaveBeenCalledTimes(2)
+  })
+
+  it("gives up instead of looping forever", () => {
+    const alwaysTaken = () => true
+
+    expect(() => createUniqueInviteCode(alwaysTaken)).toThrow(
+      "No free invite code",
+    )
   })
 })
 

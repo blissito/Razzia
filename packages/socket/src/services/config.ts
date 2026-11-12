@@ -211,7 +211,14 @@ export const saveResult = (data: GameResult): void => {
 /** Results written before survey mode have no `gameMode` field. */
 type StoredResult = Omit<GameResult, "gameMode"> & { gameMode?: QuizzMode }
 
-export const getResultsMeta = (): GameResultMeta[] => {
+export interface ResultsFilter {
+  gameId?: string
+  tenant?: string
+}
+
+export const getResultsMeta = (
+  filter: ResultsFilter = {},
+): GameResultMeta[] => {
   const resultsPath = getPath("results")
 
   if (!fs.existsSync(resultsPath)) {
@@ -228,6 +235,8 @@ export const getResultsMeta = (): GameResultMeta[] => {
     try {
       return {
         id: data.id,
+        gameId: data.gameId,
+        tenant: data.tenant,
         gameMode: data.gameMode ?? QUIZZ_MODES.QUIZ,
         subject: data.subject,
         date: data.date,
@@ -242,6 +251,11 @@ export const getResultsMeta = (): GameResultMeta[] => {
     return listJsonFiles(resultsPath)
       .map(readMeta)
       .filter((meta): meta is GameResultMeta => meta !== null)
+      .filter(
+        (meta) =>
+          (filter.gameId === undefined || meta.gameId === filter.gameId) &&
+          (filter.tenant === undefined || meta.tenant === filter.tenant),
+      )
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   } catch {
     return []

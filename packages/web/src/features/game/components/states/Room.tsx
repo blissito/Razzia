@@ -1,7 +1,7 @@
 import { EVENTS } from "@razzia/common/constants"
 import type { Player } from "@razzia/common/types/game"
 import type { ManagerStatusDataMap } from "@razzia/common/types/game/status"
-import { getBranding } from "@razzia/web/branding"
+import { useBranding, useGameLogo } from "@razzia/web/branding"
 import { safeGet } from "@razzia/web/lib/storage"
 import PlayerConnectionStatus from "@razzia/web/features/game/components/PlayerConnectionStatus"
 import {
@@ -30,7 +30,10 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
   const qrContentRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   // Instancias con entrada sólo por identidad firmada: el PIN y el QR no le sirven a nadie.
-  const joinHint = getBranding()?.joinHint
+  // La marca de la partida (si la app anfitriona mandó una) va antes que la de la instancia.
+  const branding = useBranding()
+  const joinHint = branding?.joinHint
+  const gameLogo = useGameLogo()
   // The host app's own entry link (see /embed/manager): the QR sends players there.
   const hostJoinUrl = gameId ? safeGet(`embed_join_${gameId}`) : null
 
@@ -72,6 +75,13 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
 
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-2">
+      {gameLogo && (
+        <img
+          src={gameLogo}
+          className="mb-6 h-14 max-w-xs object-contain drop-shadow-lg"
+          alt={branding?.appName ?? ""}
+        />
+      )}
       {hostJoinUrl ? (
         <div className="mb-10 flex flex-col items-center gap-3 md:flex-row md:items-stretch">
           <p className="flex max-w-xl items-center rounded-xl bg-white px-8 py-6 text-center text-2xl font-bold md:text-left">
